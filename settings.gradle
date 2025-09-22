@@ -1,0 +1,8 @@
+rootProject.name = 'root'
+include 'chat-server'
+include 'common'
+include 'document-server'
+include 'nlp-server'
+include 'member-server'
+include 'report-server'
+

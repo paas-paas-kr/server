@@ -1,0 +1,10 @@
+server:
+  port: 8080
+logging:
+  level:
+    reactor.netty: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.web.reactive: DEBUG
+    org.springframework.web.server: DEBUG
+    root: info
+    com.example.chat: debug

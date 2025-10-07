@@ -1,4 +1,14 @@
 dependencies {
 	// 필요한 의존성 추가
-    implementation project(':common')
+    //implementation project(':common')
+    // Sprinn WebFlux: 비동기/논블로킹 방식의 웹 애플리케이션을 만들기 위한 스타터
+    implementation("org.springframework.boot:spring-boot-starter-webflux") {
+        exclude group: "org.springframework.boot", module: "spring-boot-starter-web"
+    }
+
+    // Jackson Databind: 자바 객체 <-> JSON 직렬화/역직렬화를 처리하는 라이브러리
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
+    // Jackson JSR310: Java 8이상의 날짜/시간 API(LocalDate, LocalDateTime 등)를 JSON 변환할 수 있도록 지원하는 모듈
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 }

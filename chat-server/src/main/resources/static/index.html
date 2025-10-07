@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Chat WS Test (Minimal)</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 24px; }
+        #log { white-space: pre-wrap; background: #f6f7f9; padding: 12px; height: 300px; overflow: auto; border-radius: 8px; }
+        input, button { font-size: 16px; }
+    </style>
+</head>
+<body>
+<h1>WebSocket Chat (Server Log Demo)</h1>
+
+<p>
+    <button id="connect">Connect</button>
+    <button id="disconnect">Disconnect</button>
+</p>
+
+<p>
+    <input id="msg" placeholder="메시지를 입력하세요" size="50"/>
+    <button id="send">Send</button>
+</p>
+
+<div id="log"></div>
+
+<script>
+    const logEl = document.getElementById('log');
+    let ws = null;
+
+    function log(...args) {
+        logEl.textContent += args.join(' ') + "\n";
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    document.getElementById('connect').onclick = () => {
+        ws = new WebSocket(`ws://${location.host}/ws/chat`);
+        ws.onopen = () => {
+            log('[open]');
+            // 시작 신호(옵션)
+            ws.send(JSON.stringify({type:'START'}));
+        };
+        ws.onmessage = (ev) => log('[recv]', ev.data);
+        ws.onclose = () => log('[close]');
+        ws.onerror = (e) => log('[error]', e.message || e);
+    };
+
+    document.getElementById('disconnect').onclick = () => {
+        if (ws) ws.close();
+    };
+
+    document.getElementById('send').onclick = () => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return alert('먼저 연결하세요.');
+        const text = document.getElementById('msg').value;
+        if (!text) return;
+        ws.send(JSON.stringify({type:'CHAT', text}));
+        document.getElementById('msg').value = '';
+    };
+</script>
+</body>
+</html>

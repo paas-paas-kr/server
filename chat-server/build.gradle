@@ -1,4 +1,10 @@
 dependencies {
 	// 필요한 의존성 추가
     implementation project(':common')
+
+    // Spring Data JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // mysql connector
+    runtimeOnly 'com.mysql:mysql-connector-j'
 }

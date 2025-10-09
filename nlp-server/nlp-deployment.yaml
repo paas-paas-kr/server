@@ -2,24 +2,24 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: member-deployment
+  name: nlp-deployment
 
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: member-app
+      app: nlp-app
 
   template:
     metadata:
       labels:
-        app: member-app
+        app: nlp-app
     spec:
       containers:
-        - name: member-container
-          image: paaspaas.kr.ncr.ntruss.com/member-server:latest
+        - name: nlp-container
+          image: paaspaas.kr.ncr.ntruss.com/nlp-server:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
       imagePullSecrets:
-        - name: member-server-image-secret
+        - name: nlp-server-image-secret

@@ -1,43 +1,25 @@
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 
 metadata:
-  name: chat-pod-1
+  name: chat-deployment
 
 spec:
-  containers:
-    - name: chat-container
-      image: docker.io/jeongchanmin/spring-server:0.1.2
-      ports:
-        - containerPort: 8080
-      imagePullPolicy: Always
+  replicas: 3
+  selector:
+    matchLabels:
+      app: chat-app
 
----
-apiVersion: v1
-kind: Pod
-
-metadata:
-  name: chat-pod-2
-
-spec:
-  containers:
-    - name: chat-container
-      image: docker.io/jeongchanmin/spring-server:0.1.2
-      ports:
-        - containerPort: 8080
-      imagePullPolicy: Always
-
----
-apiVersion: v1
-kind: Pod
-
-metadata:
-  name: chat-pod-3
-
-spec:
-  containers:
-    - name: chat-container
-      image: docker.io/jeongchanmin/spring-server:0.1.2
-      ports:
-        - containerPort: 8080
-      imagePullPolicy: Always
+  template:
+    metadata:
+      labels:
+        app: chat-app
+    spec:
+      containers:
+        - name: chat-container
+          image: paaspaas.kr.ncr.ntruss.com/chat-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+      imagePullSecrets:
+        - name: chat-server-image-secret

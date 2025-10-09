@@ -1,61 +1,73 @@
 <!doctype html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8"/>
-    <title>Chat WS Test (Minimal)</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Chat + Voice (WebSocket Demo)</title>
     <style>
-        body { font-family: system-ui, sans-serif; margin: 24px; }
-        #log { white-space: pre-wrap; background: #f6f7f9; padding: 12px; height: 300px; overflow: auto; border-radius: 8px; }
-        input, button { font-size: 16px; }
+        :root { --gap: 12px; }
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
+        h1 { margin: 0 0 var(--gap) 0; font-size: 20px; }
+        h2 { margin: 18px 0 10px; font-size: 16px; }
+        .row { display: flex; gap: var(--gap); align-items: center; margin-bottom: var(--gap); flex-wrap: wrap; }
+        button { padding: 10px 14px; border-radius: 10px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+        button:disabled { opacity: .5; cursor: not-allowed; }
+        select, input { padding: 8px 10px; border-radius: 8px; border: 1px solid #ddd; }
+        label { font-size: 14px; }
+        .pill { padding: 4px 8px; border: 1px solid #eee; border-radius: 999px; font-size: 12px; background: #f6f6f6; }
+        .log { height: 260px; overflow: auto; background: #fafafa; border: 1px solid #eee; padding: 12px; border-radius: 10px; white-space: pre-wrap; font-size: 13px; }
+        .section { border: 1px solid #eee; border-radius: 12px; padding: 14px; margin-bottom: 16px; background: #fff; }
+        audio { width: 100%; margin-top: 6px; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     </style>
 </head>
 <body>
-<h1>WebSocket Chat (Server Log Demo)</h1>
+<h1>WebSocket: Chat + Voice</h1>
 
-<p>
-    <button id="connect">Connect</button>
-    <button id="disconnect">Disconnect</button>
-</p>
+<!-- 채팅 -->
+<div class="section">
+    <h2>채팅</h2>
+    <div class="row">
+        <label>WS Chat URL:</label>
+        <input id="ws-url-chat" size="40" />
+        <button id="btn-chat-connect">Connect</button>
+        <button id="btn-chat-disconnect" disabled>Disconnect</button>
+        <span class="pill" id="status-chat">disconnected</span>
+    </div>
+    <div class="row">
+        <input id="chat-input" placeholder="메시지를 입력하세요" size="50" />
+        <button id="btn-chat-send" disabled>Send</button>
+    </div>
+</div>
 
-<p>
-    <input id="msg" placeholder="메시지를 입력하세요" size="50"/>
-    <button id="send">Send</button>
-</p>
+<!-- 음성 -->
+<div class="section">
+    <h2>음성</h2>
+    <div class="row">
+        <label>Codec:</label>
+        <select id="codec">
+            <option value="auto" selected>Auto (webm/ogg opus)</option>
+            <option value="audio/webm;codecs=opus">audio/webm;codecs=opus</option>
+            <option value="audio/ogg;codecs=opus">audio/ogg;codecs=opus</option>
+        </select>
+        <label>WS Audio URL:</label>
+        <input id="ws-url-audio" size="40" />
+        <button id="btn-audio-start">🎙️ Start</button>
+        <button id="btn-audio-stop" disabled>⏹️ Stop</button>
+        <span class="pill" id="status-audio">idle</span>
+    </div>
+    <div>
+        <strong>Server audio (TTS):</strong>
+        <audio id="player" controls></audio>
+    </div>
+</div>
 
-<div id="log"></div>
+<!-- 로그 -->
+<div class="section">
+    <h2>로그</h2>
+    <div class="log mono" id="log"></div>
+</div>
 
-<script>
-    const logEl = document.getElementById('log');
-    let ws = null;
-
-    function log(...args) {
-        logEl.textContent += args.join(' ') + "\n";
-        logEl.scrollTop = logEl.scrollHeight;
-    }
-
-    document.getElementById('connect').onclick = () => {
-        ws = new WebSocket(`ws://${location.host}/ws/chat`);
-        ws.onopen = () => {
-            log('[open]');
-            // 시작 신호(옵션)
-            ws.send(JSON.stringify({type:'START'}));
-        };
-        ws.onmessage = (ev) => log('[recv]', ev.data);
-        ws.onclose = () => log('[close]');
-        ws.onerror = (e) => log('[error]', e.message || e);
-    };
-
-    document.getElementById('disconnect').onclick = () => {
-        if (ws) ws.close();
-    };
-
-    document.getElementById('send').onclick = () => {
-        if (!ws || ws.readyState !== WebSocket.OPEN) return alert('먼저 연결하세요.');
-        const text = document.getElementById('msg').value;
-        if (!text) return;
-        ws.send(JSON.stringify({type:'CHAT', text}));
-        document.getElementById('msg').value = '';
-    };
-</script>
+<script type="module" src="./app.js"></script>
 </body>
 </html>

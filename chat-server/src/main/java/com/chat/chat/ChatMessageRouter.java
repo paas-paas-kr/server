@@ -1,8 +1,8 @@
-package com.chat.ws;
+package com.chat.chat;
 
-import com.chat.model.MessageType;
-import com.chat.model.WsInbound;
-import com.chat.model.WsOutbound;
+import com.chat.common.ws.WsEmitter;
+import com.chat.chat.model.ChatInbound;
+import com.chat.chat.model.ChatOutbound;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,9 +15,9 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MessageRouter {
+public class ChatMessageRouter {
 
-    public Mono<Void> route(WsInbound inbound, WebSocketSession session, WsEmitter out) {
+    public Mono<Void> route(ChatInbound inbound, WebSocketSession session, WsEmitter out) {
         var type = inbound.getType();
         if (type == null) return Mono.empty();
 
@@ -25,17 +25,17 @@ public class MessageRouter {
             case START -> {
                 log.info("[WS:{}] START", session.getId());
                 // 필요하면 ACK 전송
-                out.send(WsOutbound.system("SESSION_STARTED"));
+                out.emit(ChatOutbound.system("SESSION_STARTED"));
                 yield Mono.empty();
             }
             case CHAT -> {
                 log.info("[WS:{}] CHAT: {}", session.getId(), inbound.getText());
                 // 필요하면 ACK 전송(원치 않으면 이 줄 삭제)
-                out.send(WsOutbound.system("RECEIVED:" + inbound.getText()));
+                out.emit(ChatOutbound.system("RECEIVED:" + inbound.getText()));
                 yield Mono.empty();
             }
             case PING -> {
-                out.send(WsOutbound.pong(System.currentTimeMillis()));
+                out.emit(ChatOutbound.pong(System.currentTimeMillis()));
                 yield Mono.empty();
             }
             // 기존 타입은 이번 단계에서 미사용

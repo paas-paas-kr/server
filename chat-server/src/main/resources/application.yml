@@ -8,3 +8,10 @@ logging:
     org.springframework.web.server: DEBUG
     root: info
     com.example.chat: debug
+
+app:
+  audio:
+    mock:
+      enabled: true
+      on: META
+      sample: classpath:/mock/sample-tts.ogg

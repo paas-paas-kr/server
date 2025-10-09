@@ -1,8 +1,8 @@
-package com.chat.ws;
+package com.chat.chat;
 
-import com.chat.model.WsInbound;
-import com.chat.model.WsOutbound;
-import com.chat.util.JsonUtils;
+import com.chat.common.ws.SessionRegistry;
+import com.chat.chat.model.ChatInbound;
+import com.chat.common.json.JsonUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -10,13 +10,17 @@ import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Mono;
 
+/**
+ * SessionRegistry: 현재 연결된 모든 WebSocket 세션 정보를 관리하는 저장소
+ *
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ChatWebSocketHandler implements WebSocketHandler {
 
     private final SessionRegistry registry;
-    private final MessageRouter router;
+    private final ChatMessageRouter router;
 
     @Override
     public Mono<Void> handle(WebSocketSession session) {
@@ -26,7 +30,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
                 .map(msg -> msg.getPayloadAsText())
                 .map(JsonUtils::fromJsonInbound)
                 .doOnNext(in -> log.info("[WS:{}] inbound: {}", session.getId(), in))
-                .concatMap((WsInbound in) -> router.route(in, session, emitter))
+                .concatMap((ChatInbound in) -> router.route(in, session, emitter))
                 .doFinally(sig -> {
                     log.info("[WS:{}] closed: {}", session.getId(), sig);
                     registry.cleanup(session.getId());

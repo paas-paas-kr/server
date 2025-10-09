@@ -1,4 +1,4 @@
-package com.chat.model;
+package com.chat.common.constants;
 
 /**
  * WebSocket 통신에서 사용되는 메시지 타입을 상수로 정의한 클래스

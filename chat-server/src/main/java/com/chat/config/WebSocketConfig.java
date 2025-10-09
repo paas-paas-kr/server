@@ -1,9 +1,9 @@
 package com.chat.config;
 
-import com.chat.ws.ChatWebSocketHandler;
+import com.chat.audio.AudioWebSocketHandler;
+import com.chat.chat.ChatWebSocketHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 import org.springframework.web.reactive.socket.server.WebSocketService;
 import org.springframework.web.reactive.socket.server.support.HandshakeWebSocketService;
@@ -27,10 +27,13 @@ public class WebSocketConfig implements WebFluxConfigurer {
     }
 
     @Bean
-    public SimpleUrlHandlerMapping webSocketHandlerMapping(ChatWebSocketHandler chatWsHandler /*,SttWebSocketHandler sttWsHandler*/){
+    public SimpleUrlHandlerMapping webSocketHandlerMapping(ChatWebSocketHandler chatWebSocketHandler, AudioWebSocketHandler audioWebSocketHandler/*,SttWebSocketHandler sttWsHandler*/){
         SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
         mapping.setUrlMap(Map.of(
-                "/ws/chat" , chatWsHandler/*,
+                "/ws/chat" , chatWebSocketHandler,
+                "/ws/audio", audioWebSocketHandler
+
+                /*,
                 "/ws/stt", sttWsHandler*/
         ));
         mapping.setOrder(-1);

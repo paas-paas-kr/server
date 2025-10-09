@@ -2,24 +2,24 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: document-deployment
+  name: member-deployment
 
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: document-app
+      app: member-app
 
   template:
     metadata:
       labels:
-        app: document-app
+        app: member-app
     spec:
       containers:
-        - name: document-container
-          image: paaspaas.kr.ncr.ntruss.com/document-server:latest
+        - name: member-container
+          image: paaspaas.kr.ncr.ntruss.com/member-server:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
       imagePullSecrets:
-        - name: document-server-image-secret
+        - name: member-server-image-secret

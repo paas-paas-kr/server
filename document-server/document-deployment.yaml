@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: chat-deployment
+
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: chat-app
+
+  template:
+    metadata:
+      labels:
+        app: chat-app
+    spec:
+      containers:
+        - name: chat-container
+          image: paaspaas.kr.ncr.ntruss.com/chat-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: chat-config
+                  key: db-host
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: chat-config
+                  key: db-port
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: chat-config
+                  key: db-name
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: chat-secret
+                  key: db-username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: chat-secret
+                  key: db-password
+      imagePullSecrets:
+        - name: chat-server-image-secret

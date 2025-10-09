@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: document-deployment
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: document-app
+
+  template:
+    metadata:
+      labels:
+        app: document-app
+    spec:
+      containers:
+        - name: document-container
+          image: paaspaas.kr.ncr.ntruss.com/document-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+      imagePullSecrets:
+        - name: document-server-image-secret

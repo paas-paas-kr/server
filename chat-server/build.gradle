@@ -3,8 +3,8 @@ dependencies {
     implementation project(':common')
 
     // Spring Data JPA
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
     // mysql connector
-    runtimeOnly 'com.mysql:mysql-connector-j'
+    // runtimeOnly 'com.mysql:mysql-connector-j'
 }

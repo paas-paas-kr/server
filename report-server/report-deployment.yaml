@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: report-deployment
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: report-app
+
+  template:
+    metadata:
+      labels:
+        app: report-app
+    spec:
+      containers:
+        - name: report-container
+          image: paaspaas.kr.ncr.ntruss.com/repoort-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+      imagePullSecrets:
+        - name: report-server-image-secret

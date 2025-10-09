@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: member-deployment
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: member-app
+
+  template:
+    metadata:
+      labels:
+        app: member-app
+    spec:
+      containers:
+        - name: member-container
+          image: paaspaas.kr.ncr.ntruss.com/member-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+      imagePullSecrets:
+        - name: member-server-image-secret

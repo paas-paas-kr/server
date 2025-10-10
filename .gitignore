@@ -42,3 +42,7 @@ out/
 .idea/
 .vscode/
 *.iml
+
+### Secrets ###
+*secret.yaml
+*-secret.yaml

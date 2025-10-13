@@ -36,7 +36,7 @@ public class WebClientConfig {
                 .defaultHeader("Authorization", "Bearer " + props.getStt().getApiKey())
                 .build();
     }
-
+/*
     @Bean
     public WebClient llmWebClient() {
         return WebClient.builder()
@@ -54,4 +54,6 @@ public class WebClientConfig {
                 .defaultHeader("Authorization", "Bearer " + props.getTts().getApiKey())
                 .build();
     }
+    */
+
 }

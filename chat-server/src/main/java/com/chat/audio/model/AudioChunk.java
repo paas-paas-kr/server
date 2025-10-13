@@ -7,7 +7,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class AudioChunk {
     private byte[] bytes;
-    private long timestampMs;
+    private long tsMs;
 
     public AudioChunk(byte[] bytes) {
         this(bytes, System.currentTimeMillis());

@@ -1,5 +1,6 @@
 package com.common.exception;
 
+import com.common.exception.document.DocumentException;
 import com.common.response.ErrorResponse;
 
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,15 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+	@ExceptionHandler(DocumentException.class)
+	public ResponseEntity<Object> handleDocumentException(DocumentException e) {
+		log.error("DocumentException: {}", e.getMessage(), e);
+
+		return ResponseEntity
+			.status(e.getHttpStatus())
+			.body(ErrorResponse.of(e.getHttpStatus(), e.getMessage(), e.getCode()));
+	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException e) {

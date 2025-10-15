@@ -21,5 +21,95 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: spring-profiles-active
+
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: db-host
+
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: db-port
+
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: db-name
+
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: document-secret
+                  key: db-username
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: document-secret
+                  key: db-password
+
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: redis-host
+
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: redis-port
+
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: document-secret
+                  key: redis-password
+
+            - name: CLOVA_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: document-secret
+                  key: clova-secret-key
+
+            - name: CLOVA_OCR_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: clova-ocr-api-url
+
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: document-secret
+                  key: openai-api-key
+
+            - name: OPENAI_MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: openai-model
+
+            - name: OPENAI_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: openai-api-url
+
+            - name: CONSUMER_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+
       imagePullSecrets:
         - name: document-server-image-secret

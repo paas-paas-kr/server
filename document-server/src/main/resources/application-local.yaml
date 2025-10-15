@@ -1,0 +1,53 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+
+# 로컬 파일 업로드 설정
+document:
+  upload:
+    path: ${UPLOAD_PATH:/tmp/documents}
+
+# NCP 객체 스토리지 설정
+ncp:
+  object-storage:
+    endpoint: ${NCP_OBJECT_STORAGE_ENDPOINT:https://kr.object.ncloudstorage.com}
+    region: ${NCP_OBJECT_STORAGE_REGION:kr-standard}
+    access-key: ${NCP_ACCESS_KEY}
+    secret-key: ${NCP_SECRET_KEY}
+    bucket: ${NCP_BUCKET_NAME}
+    public-url: ${NCP_PUBLIC_URL}
+
+# Clova OCR 설정
+clova:
+  ocr:
+    api-url: https://trradxiath.apigw.ntruss.com/custom/v1/46757/8d41fb2ded8882cfbcf2fb55ebd24b179269bb75543d7f3931924549a656e1d8/general
+    secret-key: ${CLOVA_SECRET_KEY}
+
+# OpenAI 설정
+openai:
+  api-key: ${OPENAI_API_KEY}
+  model: ${OPENAI_MODEL:gpt-4o-mini}
+  api-url: https://api.openai.com/v1/chat/completions
+
+# Redis Stream 설정
+redis:
+  stream:
+    consumer-name: worker-${CONSUMER_NAME:random.uuid}
+
+# 로깅 설정
+logging:
+  level:
+    com.document: DEBUG
+

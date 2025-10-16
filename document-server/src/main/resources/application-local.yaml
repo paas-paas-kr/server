@@ -12,7 +12,6 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD}
 
 # 로컬 파일 업로드 설정
 document:

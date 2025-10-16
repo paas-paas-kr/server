@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: StatefulSet
+
+metadata:
+  name: document-redis
+
+spec:
+  serviceName: document-redis-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: document-redis
+  template:
+    metadata:
+      labels:
+        app: document-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          command: ["sh", "-c", "redis-server /etc/redis/redis.conf"]
+          ports:
+            - containerPort: 6379
+              name: redis
+          volumeMounts:
+            - name: document-redis-config
+              mountPath: /etc/redis
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: document-redis-config
+          configMap:
+            name: document-redis-config
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: nks-block-storage

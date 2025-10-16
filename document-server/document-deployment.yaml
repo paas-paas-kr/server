@@ -21,17 +21,97 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
-          envFrom:
-            - configMapRef:
-                name: document-config
-            - secretRef:
-                name: document-secret
           env:
+            # ConfigMap에서 가져오는 환경 변수
             - name: SPRING_PROFILES_ACTIVE
               valueFrom:
                 configMapKeyRef:
                   name: document-config
                   key: spring-profiles-active
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: db-host
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: db-port
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: db-name
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: redis-host
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: redis-port
+            - name: OPENAI_MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: openai-model
+            - name: OPENAI_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: openai-api-url
+            - name: CLOVA_OCR_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: clova-ocr-api-url
+            - name: NCP_BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: ncp-bucket-name
+            - name: NCP_PUBLIC_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: ncp-public-url
+
+            # Secret에서 가져오는 환경 변수
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: document-secret
+                  key: db-username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: document-secret
+                  key: db-password
+            - name: CLOVA_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: document-secret
+                  key: clova-secret-key
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: document-secret
+                  key: openai-api-key
+            - name: NCP_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: document-secret
+                  key: ncp-access-key
+            - name: NCP_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: document-secret
+                  key: ncp-secret-key
+
+            # Pod 메타데이터 기반 변수
             - name: CONSUMER_NAME
               valueFrom:
                 fieldRef:

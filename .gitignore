@@ -42,3 +42,6 @@ out/
 .idea/
 .vscode/
 *.iml
+
+### chat-server ###
+/chat-server/application-secret.yml

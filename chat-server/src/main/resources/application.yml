@@ -11,7 +11,21 @@ logging:
 
 app:
   audio:
+    ffmpeg-path: "C:\\ffmpeg\\bin\\ffmpeg.exe"
     mock:
-      enabled: true
+      enabled: false
       on: META
       sample: classpath:/mock/sample-tts.ogg
+  stt:
+    base-url: https://naveropenapi.apigw.ntruss.com
+    path: /recog/v1/stt
+    language: Kor
+    connect-timeout-ms: 3000
+    read-timeout-ms: 15000
+
+
+spring:
+  main:
+    web-application-type: reactive
+  config:
+    import: "optional:classpath:application-secret.yml"

@@ -35,12 +35,15 @@ public class AppProperties {
 
     @Data
     public static class Stt {
-        private String baseUrl;            // https://naveropenapi.apigw.ntruss.com
+        private String baseUrl;            // https://naveropenapi.apigw.ntruss.com/recog/v1
         private String path;               // /recog/v1/stt
         private String language = "Kor";
 
-        // 개별 타임아웃
+        // 서버와 TCP 연결을 맺을 때까지 기다리는 최대 시간
+        /// 이 시간 안에 소켓 연결이 안 되면 ConnectTimeoutException으로 실패
         private int connectTimeoutMs = 3000;
+        // 연결이 성사되고 요청을 보낸 뒤, 수신 무활동 시간의 최대치
+        // 즉, 응답 바이트가 일정 시간 동안 전혀 들어오지 않으면 타임아웃으로 끊음
         private int readTimeoutMs = 15000;
 
         private String apiKeyId;
@@ -60,15 +63,21 @@ public class AppProperties {
         }
     }
 
+
     @Data
     public static class Audio {
-        private String ffmpegPath = "/usr/bin/ffmpeg";
+        private String ffmpegPath;
 
         private Mock mock = new Mock();
 
         @Data
         public static class Mock {
+            //mock.enabled == true면 실제 stt/tts 호출 x
             private boolean enabled = false;
+            //모킹을 언제 발사할지 트리거를 고르는 것
+            // META: 클라이언트가 메타 데이터를 보내자마자 샘플 1건 전송
+            // CHUNK: 오디오 청크를 받았을 때 샘플 전송
+            // FINAL: 클라이언트가 {"type":"FINISH"}를 보냈을 때 샘플 전송
             private String on = "META"; // META | CHUNK | FINAL
             private String sample = "classpath:/mock/sample-tts.ogg";
         }

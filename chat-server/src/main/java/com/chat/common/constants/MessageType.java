@@ -14,7 +14,6 @@ package com.chat.common.constants;
  * - 이 신호를 받은 클라이언트는 응답이 완료되었음을 인지하고 입력창을 다시 활성화하는 등의 후속 처리를 함
  * ERROR: 서버에서 LLM을 호출하다가 실패했거나, 요청 형식이 잘못되는 등 오류 상황
  */
-
 public enum MessageType {
     START,
     CHAT,

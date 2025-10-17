@@ -1,7 +1,7 @@
 dependencies {
 	// 필요한 의존성 추가
     //implementation project(':common')
-    // Sprinn WebFlux: 비동기/논블로킹 방식의 웹 애플리케이션을 만들기 위한 스타터
+    // Spring WebFlux: 비동기/논블로킹 방식의 웹 애플리케이션을 만들기 위한 스타터
     implementation("org.springframework.boot:spring-boot-starter-webflux") {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-web"
     }

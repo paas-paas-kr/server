@@ -4,7 +4,6 @@ package com.chat.audio;
 
 import com.chat.audio.model.AudioChunk;
 import com.chat.audio.model.AudioMeta;
-import com.chat.chat.model.ChatOutbound;
 import com.chat.common.json.JsonUtils;
 import com.chat.common.ws.SessionRegistry;
 import com.chat.common.ws.WsEmitter;
@@ -17,10 +16,10 @@ import com.chat.common.ws.WsEmitter;
 //import com.chat.tts.model.TtsAudio;
 //import com.chat.tts.model.TtsRequest;
 import com.chat.config.AppProperties;
-import com.chat.stt.NaverShortFormSttClient;
-import com.chat.stt.SttClient;
-import com.chat.stt.model.SttRequest;
-import com.chat.stt.model.SttResult;
+import com.chat.stt.NaverSttClient;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +31,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -39,8 +39,9 @@ public class AudioProcessor {
 
     private final SessionRegistry registry;
     private final AudioTranscoder transcoder;            // webm/opus → WAV 변환용
-    private final NaverShortFormSttClient sttClient;     // 네이버 STT REST 호출
+    private final NaverSttClient sttClient;     // 네이버 STT REST 호출
     private final AppProperties props;                   // ffmpeg 경로 등 접근 가능
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     // ----- Mock settings -----
     @Value("${app.audio.mock.enabled:false}")
@@ -102,6 +103,12 @@ public class AudioProcessor {
     // ----- Finalization: 병합된 오디오를 STT에 태워 결과를 클라로 emit -----
 
     /**
+     * sessionId: 현재 처리 중인 작업(세션)을 구분하기 위한 고유한 ID
+     * mergedBytes: byte 배열은 오디오 파일과 같은 바이너리(이진) 데이터를 담는다
+     * mimeType: 데이터의 종류를 알려주는 정보(ex: audio/webm 처럼 오디오 파일의 포맷을 나타냄)
+     * WsEmitter emitter: 클라이언트와의 웹소켓 연결 통로
+     * -> 이 객체를 통해 서버가 클라이언트에게 메시지를 실시간으로 보낼 수 있다.
+     *
      * FINISH 또는 소켓 종료 시 마지막으로 호출.
      * 1) (필요 시) webm/opus → WAV(PCM s16le, 16kHz, mono) 변환
      * 2) 네이버 Short-form STT REST 호출
@@ -116,16 +123,28 @@ public class AudioProcessor {
             return Mono.empty();
         }
 
+        /**
+         * 실제 비동기 작업 파이프라인 시작
+         * Mono.fromCallable(...)은 시간이 걸리거나 현재 스레드를 차단할 수 있는 일반 코드를
+         * 비동기 Mono 작업으로 감싸주는 역할을 한다.
+         *
+         * .subscribeOn(...): 바로 위에서 정의한 오디오 변환 작업을 어떤 스레드에서 실행할지 지정
+         * -> Schedulers.boundedElastic(): 블로킹 작업 전용으로 마련된 별도의 스레드 풀
+         * ->
+         */
         return Mono.fromCallable(() -> {
-                    // 필요 시 변환
+                    // mimeType을 보고 STT 서버가 이해할 수 있는 오디오 포맷으로 변환해야 하는지 검사
+                    // 변환이 필요하다면, transcoder를 사용해 mergedBytes 데이터를 PCM WAV 포맷으로 변환한 결과를 반환
                     if (needsTranscode(mimeType)) {
                         return transcoder.webmOpusToPcmWav16kMono(mergedBytes);
                     }
                     return mergedBytes;
                 })
                 .subscribeOn(Schedulers.boundedElastic())   // ffmpeg 호출은 블로킹 → 분리
-                .flatMap(wav -> sttClient.recognizeWav(wav)) // 네이버 STT 호출
+                .flatMap(wav -> sttClient.transcribe(wav)) // 네이버 STT 호출
                 .map(this::extractTextField)                 // {"text":"..."} → "..."
+                // .flatMap(translate::toEnglish)  // 번역 (papago 질의)
+                // .flatMap(llm:ask)               // LLM 질의
                 .doOnNext(text -> {
                     log.info("[PROC:{}] STT: {}", sessionId, text);
                     emitter.emitText(chat("TRANS", text));
@@ -160,110 +179,27 @@ public class AudioProcessor {
         return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
-    // 데모용 간단 파서(실전에서는 DTO + Jackson 권장)
+    @Nullable
     private String extractTextField(String json) {
-        int i = json.indexOf("\"text\"");
-        if (i < 0) return json;
-        int c = json.indexOf(':', i);
-        int q1 = json.indexOf('"', c + 1);
-        int q2 = json.indexOf('"', q1 + 1);
-        if (q1 < 0 || q2 < 0) return json;
-        return json.substring(q1 + 1, q2);
+        try {
+            System.out.println(json);
+            //ObjectMapper로 전체 JSON을 파싱해 루트 노드를 얻는다.
+            //readTree는 트리 전체를 메모리에 구성한다.
+            JsonNode root = MAPPER.readTree(json);
+            // 최상위 "text"만 뽑을 때
+            JsonNode text = root.path("text");
+            if(text.isMissingNode()||text.isNull()||!text.isTextual()){
+                return null; //문자열이 아니면 버림
+            }
+            return text.asText(); //여기서는 확실히 문자열
+         } catch (Exception e) {
+            log.warn("Bad STT JSON",e);
+            return null;
+        }
     }
+
 
     // 서버→클라 텍스트 프레임 직렬화를 위한 간단 DTO
     public record Msg(String type, String text) {}
 }
 
-
-
-//@Slf4j
-//@Component
-//@RequiredArgsConstructor
-//public class AudioProcessor {
-//
-//    private final SessionRegistry registry;
-//    private final SttClient sttClient;
-////    private final LlmClient llmClient;
-////    private final TtsClient ttsClient;
-//
-//    /** 세션별 메타 저장이 필요하면 간단 Map<String, AudioMeta>를 추가해도 됩니다. */
-//    // private final ConcurrentMap<String, AudioMeta> metas = new ConcurrentHashMap<>();
-//
-//    public void onMeta(String sessionId, AudioMeta meta) {
-//        log.info("[PROC:{}] meta: {}", sessionId, meta);
-//        // metas.put(sessionId, meta);
-//        // 필요 시 초기 안내를 내려보내도 됨:
-//        WsEmitter e = registry.get(sessionId);
-//        if (e != null) {
-//            e.emitText(JsonUtils.toJson(new Msg("status", "meta received: " + meta.getMimeType())));
-//        }
-//    }
-//
-//    public void onChunk(String sessionId, AudioChunk chunk) {
-//        WsEmitter emitter = registry.get(sessionId);
-//        if (emitter == null) {
-//            log.debug("[PROC:{}] emitter not found, dropping chunk", sessionId);
-//            return;
-//        }
-//
-//
-//        // 데모 단순화: 청크마다 배치 STT 호출
-//        // 실제 서비스에선 세그먼트 큐/타이머로 모아서 호출하세요.
-//        SttRequest sttReq = new SttRequest(
-//                chunk.getBytes(),
-//                /* meta에서 꺼내도 됨 */ "audio/webm;codecs=opus",
-//                /* meta에서 꺼내도 됨 */ 48000
-//        );
-//
-//        sttClient.transcribeBatch(sttReq)
-//                .flatMap(stt -> handleSttResult(sessionId, stt, emitter))
-//                .onErrorResume(e -> {
-//                    log.warn("[PROC:{}] STT error: {}", sessionId, e.toString());
-//                    emitter.emitText(JsonUtils.toJson(new Msg("error", "stt failed")));
-//                    return Mono.empty();
-//                })
-//                .subscribe(); // fire-and-forget (세션 파이프라인과 독립 실행)
-//    }
-//
-//    public void complete(String sessionId) {
-//        log.info("[PROC:{}] complete", sessionId);
-//        // metas.remove(sessionId);
-//    }
-//
-//    private Mono<Void> handleSttResult(String sessionId, SttResult stt, WsEmitter emitter) {
-//        if (stt == null || stt.getSegments() == null || stt.getSegments().isEmpty()) {
-//            return Mono.empty();
-//        }
-//        // 간단화: 마지막 segment를 사용
-//        var seg = stt.getSegments().get(stt.getSegments().size() - 1);
-//        var text = seg.getText();
-//
-//        // 1) 자막(또는 중간결과) 먼저 내려줌
-//        emitter.emitText(JsonUtils.toJson(new Msg("transcript", text)));
-//
-////        // 2) LLM → 3) TTS → 결과 푸시
-////        return llmClient.complete(new LlmRequest(text))
-////                .flatMap(llm -> {
-////                    emitter.emit(JsonUtils.toJson(new Msg("answer", llm.getText())));
-////                    return ttsClient.synthesize(new TtsRequest(llm.getText(), "basic", "audio/ogg"))
-////                            .doOnNext(tts -> emitter.emitBinary(tts.getAudio()))
-////                            .onErrorResume(e -> {
-////                                log.warn("[PROC:{}] TTS error: {}", sessionId, e.toString());
-////                                emitter.emit(JsonUtils.toJson(new Msg("error", "tts failed")));
-////                                return Mono.empty();
-////                            })
-////                            .then();
-////                })
-////                .onErrorResume(e -> {
-////                    log.warn("[PROC:{}] LLM error: {}", sessionId, e.toString());
-////                    emitter.emit(JsonUtils.toJson(new Msg("error", "llm failed")));
-////                    return Mono.empty();
-////                });
-//
-//        return Mono.empty();
-//    }
-//
-//    /** 간단 텍스트 메시지 DTO */
-//    record Msg(String type, String text) {}
-//}

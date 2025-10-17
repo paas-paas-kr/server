@@ -2,15 +2,12 @@ package com.chat.common.ws;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.WebSocketSession;
-import reactor.core.publisher.Sinks;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * @Component: 이 클래스를 스프링(Spring)이 관리하는 빈(Bean)으로 등록합니다.
+ * @Component : 이 클래스를 스프링(Spring)이 관리하는 빈(Bean)으로 등록합니다.
  * 다른 컴포넌트에서 의존성 주입(DI)을 통해 이 클래스의 단일 인스턴스를 사용할 수 있습니다.
- *
  * 활성화된 모든 웹소켓 세션(WsEmitter)을 관리하는 중앙 저장소(Registry) 역할을 하는 클래스입니다.
  * 세션 ID를 키(key)로 사용하여 각 세션의 Emitter에 쉽게 접근하고, 생성 및 제거를 담당합니다.
  * 멀티스레드 환경에서 안전하게 동작하도록 설계되었습니다.

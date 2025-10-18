@@ -46,7 +46,6 @@ public class AudioTranscoder {
         try (FileOutputStream fos = new FileOutputStream(in)) {
             fos.write(webmBytes);
         }
-        System.out.println(in.toString());
         File ff= new File(ffmpeg);
         if(!ff.exists() || !ff.isFile()){
             throw new FileNotFoundException("ffmpeg 실행 파일을 찾을 수 없습니다.");
@@ -123,5 +122,6 @@ public class AudioTranscoder {
         out.delete();
 
         return wav;
+
     }
 }

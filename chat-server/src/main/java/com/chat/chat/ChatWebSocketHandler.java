@@ -39,4 +39,5 @@ public class ChatWebSocketHandler implements WebSocketHandler {
         var outbound = session.send(emitter.flux());
         return Mono.when(inbound, outbound);
     }
+
 }

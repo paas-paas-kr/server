@@ -23,4 +23,5 @@ public class ChatOutbound {
         o.ts = ts;
         return o;
     }
+
 }

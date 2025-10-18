@@ -19,14 +19,14 @@ public class NaverSttClient implements SttClient{
     private final AppProperties props;
 
     /** WAV(PCM s16le/16k/mono) 바이트를 짧은 음성 인식 API에 전송 */
-    public Mono<String> transcribe(byte[] wavBytes) {
+    public Mono<String> transcribe(byte[] wavBytes, String csrLang) {
         var stt = props.getStt();
         System.out.println(stt);
 
         return sttWebClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path(stt.getPath())                  // /recog/v1
-                        .queryParam("lang", stt.getLanguage())// Kor
+                        .queryParam("lang", csrLang)    // 요청마다 언어 반영
                         .build())
                 .headers(header->{
                     header.set("X-NCP-APIGW-API-KEY", stt.getApiKey());
@@ -38,4 +38,5 @@ public class NaverSttClient implements SttClient{
                 .bodyToMono(String.class)
                 .doOnNext(res -> log.info("[STT] response: {}", res));
     }
+
 }

@@ -21,4 +21,5 @@ public class JsonUtils {
         try { return MAPPER.writeValueAsString(o); }
         catch (JsonProcessingException e) { throw new IllegalArgumentException(e); }
     }
+
 }

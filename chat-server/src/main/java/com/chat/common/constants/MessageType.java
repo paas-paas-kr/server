@@ -20,4 +20,5 @@ public enum MessageType {
     PING,
     AUDIO_CHUNK,
     STOP
+
 }

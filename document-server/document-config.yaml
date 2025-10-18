@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: document-config
+
+data:
+  # Spring profile
+  spring-profiles-active: prod
+
+  # DB
+  db-host: document-mysql-service
+  db-port: "3306"
+  db-name: document-db
+
+  redis-host: document-redis-service
+  redis-port: "6379"
+
+  # OpenAI
+  openai-model: gpt-4o-mini
+  openai-api-url: https://api.openai.com/v1/chat/completions
+
+  # Clova OCR
+  clova-ocr-api-url: https://trradxiath.apigw.ntruss.com/custom/v1/46757/8d41fb2ded8882cfbcf2fb55ebd24b179269bb75543d7f3931924549a656e1d8/general
+
+  # NCP 객체 스토리지
+  ncp-bucket-name: paaspaas-document
+  ncp-public-url: https://kr.object.ncloudstorage.com/paaspaas-document

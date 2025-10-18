@@ -17,4 +17,5 @@ public class SecurityConfig {
                 .authorizeExchange(ex-> ex.anyExchange().permitAll())
                 .build();
     }
+
 }

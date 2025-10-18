@@ -33,25 +33,24 @@ public class WebClientConfig {
      * -> 각종 타임아웃과 채널 핸들러를 심어 놓고, 그걸 WebClient가 쓰도록 어댑터(ReactorClientHttpConnector)로 감싸서 반환
      *-> sttWebClient()가 내부에서 쓰는 HttpClient에 옵션이 결려있으면, 그 WebClient가 만드는 모든 신규 소켓 연결에 동일하게 적용
      *
-     *코드 분석
-     * .option(...)
-     * TCP 연결 수립 단계에서의 최대 대기시간을 설정
+     *connectTimeoutMs: TCP 연결이 완료될 때까지 기다리는 시간(보통 3000ms 정도)
+     * readTimeoutMs: 요청을 보낸 뒤 서버 응답(첫 바이트/헤더)를 받을 때까지 기다리는 시간(STT는 60000~90000ms 권장)
      */
-    private ReactorClientHttpConnector connector(int timeoutMs) {
+    private ReactorClientHttpConnector connector(int connectTimeoutMs,int readTimeoutMs) {
         HttpClient http = HttpClient.create()
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, timeoutMs)
-                .responseTimeout(Duration.ofMillis(timeoutMs))
-                .doOnConnected(conn ->
-                        conn.addHandlerLast(new ReadTimeoutHandler(timeoutMs, TimeUnit.MILLISECONDS))
-                                .addHandlerLast(new WriteTimeoutHandler(timeoutMs, TimeUnit.MILLISECONDS)));
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMs)   // TCP 연결 타임아웃
+                .responseTimeout(java.time.Duration.ofMillis(readTimeoutMs));     // 응답 대기 타임아웃
+
+
         return new ReactorClientHttpConnector(http);
+
     }
 
     @Bean
     public WebClient sttWebClient(){
         return WebClient.builder()
                 .baseUrl(props.getStt().getBaseUrl())
-                .clientConnector(connector(props.getStt().getConnectTimeoutMs()))
+                .clientConnector(connector(props.getStt().getConnectTimeoutMs(),props.getStt().getReadTimeoutMs()))
                 .build();
     }
 /*
@@ -73,5 +72,6 @@ public class WebClientConfig {
                 .build();
     }
     */
+
 
 }

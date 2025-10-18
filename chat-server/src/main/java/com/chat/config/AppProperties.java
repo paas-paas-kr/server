@@ -82,4 +82,5 @@ public class AppProperties {
             private String sample = "classpath:/mock/sample-tts.ogg";
         }
     }
+
 }

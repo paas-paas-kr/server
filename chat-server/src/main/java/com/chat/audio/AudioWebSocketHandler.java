@@ -16,11 +16,11 @@ import reactor.core.publisher.Mono;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;
-
 
 @Slf4j
 @Component
@@ -30,60 +30,101 @@ public class AudioWebSocketHandler implements WebSocketHandler {
     private final SessionRegistry registry;
     private final AudioProcessor processor;
 
-    /**
-     *
-     * @param session the session to handle
-     * @return
-     */
     @Override
     public Mono<Void> handle(WebSocketSession session) {
         final String sid = session.getId();
         final WsEmitter emitter = registry.createEmitter(sid, session);
         final long startedAtNanos = System.nanoTime();
-
-        // 세션별 오디오 누적기
         final AudioAggregator aggregator = new AudioAggregator();
 
         var inbound = session.receive()
                 .flatMap(msg -> {
+
+
                     if (msg.getType() == WebSocketMessage.Type.TEXT) {
+                        // 수신
                         var text = msg.getPayloadAsText();
 
-                        // FINISH 요청: 병합 → STT 파이프라인 → complete
+                        // FINISH: 짧은 디바운스 후 병합 → 처리 완료 시 소켓 종료
                         if (text.startsWith("{") && text.contains("\"type\":\"FINISH\"")) {
-                            return Mono.fromRunnable(() -> {
+                            return Mono.defer(() -> {
                                 try {
-                                    byte[] merged = aggregator.merge();
-                                    if (merged != null && merged.length > 0) {
-                                        String mime = (aggregator.meta != null ? aggregator.meta.getMimeType() : null);
-                                        processor.processFinal(sid, merged, mime, emitter).subscribe(); // 비동기 처리
-                                    } else {
-                                        log.info("[AUDIO:{}] no audio to process on FINISH", sid);
-                                        emitter.emitText(system("녹음된 오디오가 없습니다."));
+                                    if (aggregator.meta == null || isBlank(aggregator.meta.getLang())) {
+                                        log.warn("[AUDIO:{}] FINISH without lang/meta", sid);
+                                        emitter.emitText(system("언어를 선택하세요."));
+                                        emitter.complete();
+                                        return Mono.empty();
                                     }
+                                    // 늦게 도착하는 마지막 청크 수용
+                                    return Mono.delay(Duration.ofMillis(180))
+                                            .then(Mono.fromCallable(aggregator::merge))
+                                            .flatMap(merged -> {
+                                                int len = merged == null ? -1 : merged.length;
+                                                log.info("[AUDIO:{}] merged {}B on FINISH", sid, len);
+
+                                                if (merged == null || merged.length == 0) {
+                                                    emitter.emitText(system("녹음된 오디오가 없습니다."));
+                                                    // cleanup & complete
+                                                    processor.complete(sid);
+                                                    registry.cleanup(sid);
+                                                    emitter.complete();
+                                                    return Mono.empty();
+                                                }
+                                                String mime = (aggregator.meta != null ? aggregator.meta.getMimeType() : null);
+
+                                                // 처리 완료/오류 시점에서만 소켓 종료
+                                                return processor.processFinal(sid, merged, mime, emitter)
+                                                        .doOnError(e -> {
+                                                            log.error("[AUDIO:{}] process failed on FINISH", sid, e);
+                                                            emitter.emitText(system("오디오 처리 오류: " + e.getMessage()));
+                                                        })
+                                                        .doFinally(s -> {
+                                                            processor.complete(sid);
+                                                            registry.cleanup(sid);
+                                                            emitter.complete();
+                                                        });
+                                            });
                                 } catch (Exception e) {
-                                    log.error("[AUDIO:{}] process failed on FINISH", sid, e);
+                                    log.error("[AUDIO:{}] process failed on FINISH-enter", sid, e);
                                     emitter.emitText(system("오디오 처리 오류: " + e.getMessage()));
-                                } finally {
-                                    // 서버가 종료 주도 (클라가 stop()에서 close 진행)
                                     emitter.complete();
+                                    return Mono.empty();
                                 }
                             });
                         }
 
-                        // 메타(초기 1회)
+                        // START 메타
                         try {
                             var meta = JsonUtils.fromJson(text, AudioMeta.class);
                             aggregator.setMeta(meta);
+                            emitter.setAttribute("audioMeta", meta);
                             processor.onMeta(sid, meta);
                             log.info("[AUDIO:{}] meta: {}", sid, meta);
                         } catch (Exception ignore) {
-                            // FINISH가 아니고, AudioMeta도 아니면 무시
                             log.debug("[AUDIO:{}] text ignored: {}", sid, text);
                         }
                         return Mono.empty();
                     }
 
+                    /**
+                     *  브라우저 MediaRecorder가 마이크 스트림을 주기적으로 잘라 Blob 청크를 만들어 준다.
+                     *  그 주기를 정하는게 recorder.start(timesliceMS)
+                     *  // [ 4바이트(seq, big-endian) | payload(body) ] 포맷의 바이트 배열 생성
+                     *  const out  = new Uint8Array(4 + body.byteLength);
+                     *  const view = new DataView(out.buffer);
+                     *  view.setUint32(0, seq);               // 서버의 toIntBE(0)과 호환되는 big-endian
+                     *  out.set(new Uint8Array(body), 4);     // 뒤에 오디오 바이트 부착
+                     *  wsAudio.send(out);
+                     *  sentChunks++;
+                     *
+                     * BINARY 프레임 예시:
+                     * 클라이언트에서 보내는 바이너리 프레임 페이로드 모양
+                     * [ 00 00 00 2A | <오디오 바이트...>(가변) ]
+                     * 앞 4바이트: 시퀀스 번호
+                     * -> 네트워크에서 프레임 순서 바뀌거나 일부 늦게 도착해도, 서버가 seq로 정렬해서 시간 순으로 복원하기 위해서
+                     * 뒤쪽: 오디오 바이트(청크)
+                     *
+                     */
                     if (msg.getType() == WebSocketMessage.Type.BINARY) {
                         return Mono.fromSupplier(() -> {
                                     var db = msg.getPayload();
@@ -96,13 +137,12 @@ public class AudioWebSocketHandler implements WebSocketHandler {
                                         log.warn("[AUDIO:{}] invalid chunk(<4B)", sid);
                                         return;
                                     }
-                                    int seq = toIntBE(bytes, 0);
+                                    int seq = toIntBE(bytes, 0); // 클라 DataView.setUint32(0, seq)와 호환
                                     byte[] payload = Arrays.copyOfRange(bytes, 4, bytes.length);
 
                                     aggregator.add(seq, payload);
                                     log.info("[AUDIO:{}] recv seq={} payload={}B", sid, seq, payload.length);
 
-                                    // (선택) 실시간 메트릭/로그
                                     long tsMs = (System.nanoTime() - startedAtNanos) / 1_000_000L;
                                     processor.onChunk(sid, new AudioChunk(payload, tsMs));
                                 })
@@ -112,22 +152,42 @@ public class AudioWebSocketHandler implements WebSocketHandler {
                     return Mono.empty();
                 })
                 .doFinally(sig -> {
-                    try {
-                        // 소켓이 예기치 않게 끊긴 경우에도, 아직 처리 안 했으면 마지막 시도
-                        if (!aggregator.isClosed()) {
-                            byte[] merged = aggregator.merge();
-                            if (merged != null && merged.length > 0) {
-                                String mime = (aggregator.meta != null ? aggregator.meta.getMimeType() : null);
-                                processor.processFinal(sid, merged, mime, emitter).subscribe();
+                            // 소켓 비정상 종료 시, 아직 병합 안 했으면 마지막 시도 (디바운스 없이 즉시)
+                            try {
+                                if (!aggregator.isClosed()) {
+                                    if (aggregator.meta == null || isBlank(aggregator.meta.getLang())) {
+                                        log.warn("[AUDIO:{}] finally without lang/meta, skip", sid);
+                                    } else {
+                                        byte[] merged = aggregator.merge();
+                                        if (merged != null && merged.length > 0) {
+                                            String mime = (aggregator.meta != null ? aggregator.meta.getMimeType() : null);
+                                            processor.processFinal(sid, merged, mime, emitter)
+                                                    .doFinally(s -> {
+                                                        processor.complete(sid);
+                                                        registry.cleanup(sid);
+                                                        emitter.complete();
+                                                    })
+                                                    .subscribe();
+                                        } else {
+                                            processor.complete(sid);
+                                            registry.cleanup(sid);
+                                            emitter.complete();
+                                        }
+                                    }
+                                } else {
+                                    // 이미 FINISH 경로에서 정리됨
+                                    processor.complete(sid);
+                                    registry.cleanup(sid);
+                                    emitter.complete();
+                                }
+                            } catch (Exception e) {
+                                log.error("[AUDIO:{}] process failed on finally", sid, e);
+                                processor.complete(sid);
+                                registry.cleanup(sid);
+                                emitter.complete();
                             }
                         }
-                    } catch (Exception e) {
-                        log.error("[AUDIO:{}] process failed on finally", sid, e);
-                    } finally {
-                        processor.complete(sid);
-                        registry.cleanup(sid);
-                    }
-                });
+                );
 
         var outbound = session.send(emitter.flux());
         return Mono.when(inbound, outbound);
@@ -139,46 +199,54 @@ public class AudioWebSocketHandler implements WebSocketHandler {
         return ((a[off] & 0xFF) << 24)
                 | ((a[off + 1] & 0xFF) << 16)
                 | ((a[off + 2] & 0xFF) << 8)
-                |  (a[off + 3] & 0xFF);
+                | (a[off + 3] & 0xFF);
     }
 
     private static String system(String msg) {
-        return "{\"type\":\"SYSTEM\",\"text\":\"" + msg.replace("\"","\\\"") + "\"}";
+        return "{\"type\":\"SYSTEM\",\"text\":\"" + msg.replace("\"", "\\\"") + "\"}";
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.isBlank();
     }
 
     /**
      * seq 기준 정렬/병합기.
-     * 주의: MediaRecorder(WebM/Opus) 조각 단순 연결은 컨테이너 관점 완전 보장을 하진 않음.
-     * 다운로드/1회 재생 용도엔 보통 충분하지만, 확정 파일은 remux 권장.
+     * MediaRecorder 조각은 컨테이너 레벨 완전 보장되진 않으므로, 최종 파일은 서버에서 remux/변환 권장.
      */
     static final class AudioAggregator {
         private final ConcurrentSkipListMap<Integer, byte[]> ordered = new ConcurrentSkipListMap<>();
         private final AtomicBoolean closed = new AtomicBoolean(false);
         private final LongAdder totalBytes = new LongAdder();
-        volatile AudioMeta meta; // handler에서 접근하므로 패키지 내 가시성/volatile
+        volatile AudioMeta meta;
 
-        void setMeta(AudioMeta meta) { this.meta = meta; }
+        void setMeta(AudioMeta meta) {
+            this.meta = meta;
+        }
 
         void add(int seq, byte[] payload) {
             if (closed.get()) return;
-            ordered.computeIfAbsent(seq, s -> {
-                totalBytes.add(payload.length);
-                return payload;
+            ordered.compute(seq, (k, v) -> {
+                if (v == null) {
+                    totalBytes.add(payload.length);
+                    return payload;
+                }
+                // 중복 seq 방어: 최초 것만 유지
+                return v;
             });
         }
 
-        boolean isClosed() { return closed.get(); }
+        boolean isClosed() {
+            return closed.get();
+        }
 
         byte[] merge() {
             if (!closed.compareAndSet(false, true)) return new byte[0];
             long size = totalBytes.sum();
             if (size <= 0) return new byte[0];
-
-            ByteArrayOutputStream bos = new ByteArrayOutputStream((int)Math.min(size, Integer.MAX_VALUE));
+            ByteArrayOutputStream bos = new ByteArrayOutputStream((int) Math.min(size, Integer.MAX_VALUE));
             try {
-                for (var e : ordered.entrySet()) {
-                    bos.write(e.getValue());
-                }
+                for (var e : ordered.entrySet()) bos.write(e.getValue());
                 return bos.toByteArray();
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
@@ -187,4 +255,5 @@ public class AudioWebSocketHandler implements WebSocketHandler {
             }
         }
     }
+
 }

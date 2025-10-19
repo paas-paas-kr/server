@@ -38,7 +38,7 @@ public enum Lang {
      * @param csrLang 변환할 Naver CSR 언어 코드
      * @return Papago API에서 사용하는 언어 코드
      */
-    private String mapCsrToPapago(String csrLang) {
+    public static String mapCsrToPapago(String csrLang) {
         switch (csrLang) {
             case "Kor": return "ko";
             case "Eng": return "en";

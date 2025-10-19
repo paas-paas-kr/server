@@ -32,10 +32,11 @@ public class AppProperties {
 
     private Stt stt = new Stt();
     private Audio audio = new Audio();
+    private Trans trans = new Trans();
 
     @Data
     public static class Stt {
-        private String baseUrl;            // https://naveropenapi.apigw.ntruss.com/recog/v1
+        private String baseUrl;            // https://naveropenapi.apigw.ntruss.com
         private String path;               // /recog/v1/stt
         private String language = "Kor";
 
@@ -62,6 +63,19 @@ public class AppProperties {
             this.readTimeoutMs = ms;
         }
     }
+
+    @Data
+    public static class Trans {
+        private String baseUrl;
+        private String target;
+        private String path;
+        private String source;
+        private String apiKey;
+        private String apiKeyId;
+        private int connectTimeoutMs;
+        private int readTimeoutMs;
+    }
+
 
 
     @Data

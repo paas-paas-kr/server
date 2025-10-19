@@ -5,6 +5,7 @@ logging:
     reactor.netty: DEBUG
     org.springframework.web: DEBUG
     org.springframework.web.reactive: DEBUG
+    org.springframework.web.reactive.client.ExchangeFunctions: TRACE
     org.springframework.web.server: DEBUG
     root: info
     com.example.chat: debug
@@ -22,7 +23,13 @@ app:
     language: Kor
     connect-timeout-ms: 3000
     read-timeout-ms: 60000
-
+  trans:
+    baseurl: https://papago.apigw.ntruss.com
+    path: /nmt/v1/translation
+    source: auto
+    target: ko
+    connect-timeout-ms: 3000
+    read-timeout-ms: 60000
 
 spring:
   main:

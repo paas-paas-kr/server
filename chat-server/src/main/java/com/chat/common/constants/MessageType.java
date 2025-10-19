@@ -19,6 +19,7 @@ public enum MessageType {
     CHAT,
     PING,
     AUDIO_CHUNK,
-    STOP
+    STOP,
+    TRANS
 
 }

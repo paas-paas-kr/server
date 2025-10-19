@@ -22,10 +22,17 @@ app:
     language: Kor
     connect-timeout-ms: 3000
     read-timeout-ms: 60000
-
+  trans:
+    baseurl: https://papago.apigw.ntruss.com
+    path: /nmt/v1/translation
+    source: auto
+    target: ko
+    connect-timeout-ms: 3000
+    read-timeout-ms: 60000
 
 spring:
   main:
     web-application-type: reactive
   config:
     import: "optional:classpath:application-secret.yml"
+

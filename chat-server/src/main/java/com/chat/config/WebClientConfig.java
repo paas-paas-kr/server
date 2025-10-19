@@ -41,7 +41,6 @@ public class WebClientConfig {
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMs)   // TCP 연결 타임아웃
                 .responseTimeout(java.time.Duration.ofMillis(readTimeoutMs));     // 응답 대기 타임아웃
 
-
         return new ReactorClientHttpConnector(http);
 
     }
@@ -53,6 +52,15 @@ public class WebClientConfig {
                 .clientConnector(connector(props.getStt().getConnectTimeoutMs(),props.getStt().getReadTimeoutMs()))
                 .build();
     }
+
+    @Bean
+    public WebClient transWebClient(){
+        return WebClient.builder()
+                .baseUrl(props.getTrans().getBaseUrl())
+                .clientConnector(connector(props.getStt().getConnectTimeoutMs(),props.getTrans().getConnectTimeoutMs()))
+                .build();
+    }
+
 /*
     @Bean
     public WebClient llmWebClient() {

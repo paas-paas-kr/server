@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class ChatMessageRouter {
 
+
     public Mono<Void> route(ChatInbound inbound, WebSocketSession session, WsEmitter out) {
         var type = inbound.getType();
         if (type == null) return Mono.empty();
@@ -32,6 +33,11 @@ public class ChatMessageRouter {
                 log.info("[WS:{}] CHAT: {}", session.getId(), inbound.getText());
                 // 필요하면 ACK 전송(원치 않으면 이 줄 삭제)
                 out.emit(ChatOutbound.system("RECEIVED:" + inbound.getText()));
+                yield Mono.empty();
+            }
+            case TRANS -> {
+                log.info("[WS:{}] TRANS: {}", session.getId(),inbound.getText());
+                out.emit(ChatOutbound.system("TRANSRECEIVED:"+inbound.getText()));
                 yield Mono.empty();
             }
             case PING -> {

@@ -33,8 +33,6 @@ public class WebSocketConfig implements WebFluxConfigurer {
                 "/ws/chat" , chatWebSocketHandler,
                 "/ws/audio", audioWebSocketHandler
 
-                /*,
-                "/ws/stt", sttWsHandler*/
         ));
         mapping.setOrder(-1);
         return mapping;

@@ -18,6 +18,7 @@ import com.chat.common.ws.WsEmitter;
 //import com.chat.tts.model.TtsRequest;
 import com.chat.config.AppProperties;
 import com.chat.stt.NaverSttClient;
+import com.chat.trans.NaverPapagoTransClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nullable;
@@ -41,6 +42,7 @@ public class AudioProcessor {
     private final SessionRegistry registry;
     private final AudioTranscoder transcoder;
     private final NaverSttClient sttClient;
+    private final NaverPapagoTransClient transClient;
     private final AppProperties props;
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -61,6 +63,7 @@ public class AudioProcessor {
     }
 
     public Mono<Void> processFinal(String sessionId, byte[] mergedBytes, String mimeType, WsEmitter emitter) {
+        AudioMeta meta= emitter.getAttribute("audioMeta",AudioMeta.class);
 
         return Mono.fromCallable(() -> {
                      if (needsTranscode(mimeType)) {
@@ -70,7 +73,6 @@ public class AudioProcessor {
                 })
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(wav -> {
-                    AudioMeta meta= emitter.getAttribute("audioMeta",AudioMeta.class);
                     if (meta == null || meta.getLang() == null || meta.getLang().isBlank()) {
                         return Mono.error(new IllegalStateException("lang is required (START)"));
                     }
@@ -79,7 +81,16 @@ public class AudioProcessor {
                     return sttClient.transcribe(wav,lang.csr);
                 })
                 .map(this::extractTextField)
-                // .flatMap(translate::toEnglish)  // 번역 (papago 질의)
+                .doOnNext(text -> {
+                    log.info("[PROC:{}] STT: {}", sessionId, text);
+                    emitter.emitText(chat("TRANS", text));
+                })
+                .flatMap(text->{
+                    if (text.equals("")){
+                        return Mono.error(new IllegalStateException("No text"));
+                    }
+                    return transClient.translate(Lang.mapCsrToPapago(meta.getLang()),"ko",text);
+                })  // 번역 (papago 질의)
                 // .flatMap(llm:ask)               // LLM 질의
                 .doOnNext(text -> {
                     log.info("[PROC:{}] STT: {}", sessionId, text);

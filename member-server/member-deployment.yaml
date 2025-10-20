@@ -58,7 +58,7 @@ spec:
                 configMapKeyRef:
                   name: member-config
                   key: gateway-service-url
-            - name : JWT_SECRET_KEY
+            - name : JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: member-secret

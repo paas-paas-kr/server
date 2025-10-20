@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: gateway-deployment
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway-app
+
+  template:
+    metadata:
+      labels:
+        app: gateway-app
+    spec:
+      containers:
+        - name: gateway-container
+          image: paaspaas.kr.ncr.ntruss.com/gateway-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            # ConfigMap에서 가져오는 환경 변수
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: spring-profiles-active
+            - name: MEMBER_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: member-service-url
+            - name: DOCUMENT_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: document-service-url
+            - name: CHAT_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: chat-service-url
+            - name: REPORT_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: report-service-url
+            - name: NLP_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: nlp-service-url
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-secret
+                  key: jwt-secret
+      imagePullSecrets:
+        - name: gateway-server-image-secret

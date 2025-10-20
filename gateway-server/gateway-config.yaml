@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: gateway-config
+
+data:
+  # Spring profile
+  spring-profiles-active: prod
+
+  # Service URLs
+  member-service-url: http://member-service
+  document-service-url: http://document-service
+  chat-service-url: http://chat-service
+  report-service-url: http://report-service
+  nlp-service-url: http://nlp-service

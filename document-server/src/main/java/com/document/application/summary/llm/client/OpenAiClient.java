@@ -1,6 +1,6 @@
 package com.document.application.summary.llm.client;
 
-import com.common.config.OpenAiConfig;
+import com.document.config.OpenAiConfig;
 import com.common.exception.document.DocumentErrorCode;
 import com.common.exception.document.DocumentException;
 import com.fasterxml.jackson.databind.JsonNode;

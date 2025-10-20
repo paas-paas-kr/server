@@ -1,6 +1,6 @@
 package com.document.application.summary.ocr.client;
 
-import com.common.config.NaverOcrConfig;
+import com.document.config.NaverOcrConfig;
 import com.common.exception.document.DocumentErrorCode;
 import com.common.exception.document.DocumentException;
 import com.fasterxml.jackson.databind.JsonNode;

@@ -26,3 +26,6 @@ data:
   # NCP 객체 스토리지
   ncp-bucket-name: paaspaas-document
   ncp-public-url: https://kr.object.ncloudstorage.com/paaspaas-document
+
+  # Gateway 서비스 URL
+  gateway-service-url: http://gateway-service

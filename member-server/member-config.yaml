@@ -17,4 +17,4 @@ data:
   redis-port: "6379"
 
   # Gateway 서비스 URL
-  gateway-service-url: http://gateway-service
+  gateway-service-url: http://default-gateway-service-3c796-111636377-d0c75d212fa0.kr.lb.naverncp.com:8080

@@ -53,7 +53,7 @@ spec:
                 configMapKeyRef:
                   name: member-config
                   key: redis-port
-            - name: GATEWAY_SERVICE_URL
+            - name: GATEWAY_URL
               valueFrom:
                 configMapKeyRef:
                   name: member-config

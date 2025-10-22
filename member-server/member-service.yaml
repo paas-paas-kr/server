@@ -5,12 +5,12 @@ metadata:
   name: member-service
 
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: member-app
   ports:
     - name: http
       protocol: TCP
       port: 8080
-      targetPort: 8080
-      # nodePort: 30001
+      targetPort: 8081
+

@@ -5,11 +5,11 @@ metadata:
   name: document-service
 
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: document-app
   ports:
     - name: http
       protocol: TCP
       port: 8080
-      targetPort: 8080
+      targetPort: 8082

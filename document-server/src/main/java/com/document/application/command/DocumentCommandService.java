@@ -2,18 +2,19 @@ package com.document.application.command;
 
 import com.common.exception.document.DocumentErrorCode;
 import com.common.exception.document.DocumentException;
+import com.document.application.messaging.JobCreatedEvent;
 import com.document.application.storage.StorageService;
 import com.document.command.UploadDocument;
 import com.document.command.UploadImage;
 import com.document.domain.Document;
 import com.document.domain.SummaryJob;
 import com.document.dto.UploadResponse;
-import com.document.application.messaging.SummaryJobPublisher;
 import com.document.repository.DocumentRepository;
 import com.document.repository.SummaryJobRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,7 +30,7 @@ public class DocumentCommandService {
 	private final DocumentRepository documentRepository;
 	private final SummaryJobRepository summaryJobRepository;
 
-	private final SummaryJobPublisher summaryJobPublisher;
+	private final ApplicationEventPublisher eventPublisher;
 
 	/**
 	 * 1. 파일을 저장 (StorageService)
@@ -56,8 +57,8 @@ public class DocumentCommandService {
 
 			documentRepository.save(document);
 
-			// Redis Stream에 작업 메시지 발행
-			summaryJobPublisher.publishJobCreated(job.getId());
+			// 트랜잭션 커밋 후 이벤트 발행 (TransactionalEventListener가 처리)
+			eventPublisher.publishEvent(new JobCreatedEvent(job.getId()));
 
 			return UploadResponse.of(
 				job.getId(),
@@ -94,8 +95,8 @@ public class DocumentCommandService {
 				}
 			}
 
-			// Redis Stream에 작업 메시지 발행
-			summaryJobPublisher.publishJobCreated(job.getId());
+			// 트랜잭션 커밋 후 이벤트 발행 (TransactionalEventListener가 처리)
+			eventPublisher.publishEvent(new JobCreatedEvent(job.getId()));
 
 			return UploadResponse.of(
 				job.getId(),

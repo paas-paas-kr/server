@@ -1,0 +1,28 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: member-server
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+# Gateway Configuration (for Swagger)
+gateway:
+  url: ${GATEWAY_URL:http://localhost:8080}
+
+# SpringDoc (Swagger) Configuration
+springdoc:
+  api-docs:
+    path: /member/v3/api-docs
+  swagger-ui:
+    path: /member/swagger-ui.html

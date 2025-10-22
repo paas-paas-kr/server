@@ -1,6 +1,6 @@
 dependencies {
 	// 필요한 의존성 추가
-    implementation project(':common')
+    // implementation project(':common')
 
     // Spring Data JPA
     // implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

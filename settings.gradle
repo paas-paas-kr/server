@@ -1,4 +1,5 @@
 rootProject.name = 'root'
+include 'gateway-server'
 include 'chat-server'
 include 'common'
 include 'document-server'

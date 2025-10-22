@@ -36,7 +36,6 @@ subprojects { // 모든 하위 모듈들에 이 설정을 적용합니다.
     }
 
     dependencies { // 모든 하위 모듈에 추가 될 의존성 목록입니다.
-        implementation 'org.springframework.boot:spring-boot-starter-web'
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'

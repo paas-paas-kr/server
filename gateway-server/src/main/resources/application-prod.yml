@@ -1,0 +1,93 @@
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # Member Service - Swagger (JWT 불필요)
+            - id: member-swagger
+              uri: ${MEMBER_SERVICE_URL}
+              predicates:
+                - Path=/member/swagger-ui/**, /member/v3/api-docs/**
+              order: 0
+
+            # Member Auth Service - 로그인/회원가입 (JWT 불필요)
+            - id: member-auth-public
+              uri: ${MEMBER_SERVICE_URL}
+              predicates:
+                - Path=/api/auth/login, /api/auth/signup
+              order: 1
+
+            # Member Auth Service - 나머지 경로 (JWT 필요, 예: /api/auth/me)
+            - id: member-auth-private
+              uri: ${MEMBER_SERVICE_URL}
+              predicates:
+                - Path=/api/auth/**
+              filters:
+                - name: JwtAuthenticationFilter
+              order: 2
+
+            # Document Service - Swagger (JWT 불필요)
+            - id: document-swagger
+              uri: ${DOCUMENT_SERVICE_URL}
+              predicates:
+                - Path=/document/swagger-ui/**, /document/v3/api-docs/**
+              order: 3
+
+            # Document Service API (JWT 필요)
+            - id: document-service
+              uri: ${DOCUMENT_SERVICE_URL}
+              predicates:
+                - Path=/api/documents/**
+              filters:
+                - name: JwtAuthenticationFilter
+              order: 4
+
+            # Chat Service 라우팅 (JWT 필요)
+            - id: chat-service
+              uri: ${CHAT_SERVICE_URL}
+              predicates:
+                - Path=/api/chat/**
+              filters:
+                - name: JwtAuthenticationFilter
+
+            # Report Service 라우팅 (JWT 필요)
+            - id: report-service
+              uri: ${REPORT_SERVICE_URL}
+              predicates:
+                - Path=/api/reports/**
+              filters:
+                - name: JwtAuthenticationFilter
+
+            # NLP 서비스 라우팅 (JWT 필요)
+            - id: nlp-service
+              uri: ${NLP_SERVICE_URL}
+              predicates:
+                - Path=/api/nlp/**
+              filters:
+                - name: JwtAuthenticationFilter
+
+          globalcors:
+            cors-configurations:
+              "[/**]":
+                allowed-origins:
+                  - "*"
+                allowed-methods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                allowed-headers:
+                  - "*"
+                exposed-headers:
+                  - Content-Disposition
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET}
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.gateway: DEBUG

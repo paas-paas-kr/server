@@ -20,7 +20,7 @@ spec:
           image: paaspaas.kr.ncr.ntruss.com/document-server:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8080
+            - containerPort: 8082
           env:
             # ConfigMap에서 가져오는 환경 변수
             - name: SPRING_PROFILES_ACTIVE
@@ -78,6 +78,11 @@ spec:
                 configMapKeyRef:
                   name: document-config
                   key: ncp-public-url
+            - name: GATEWAY_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: document-config
+                  key: gateway-service-url
 
             # Secret에서 가져오는 환경 변수
             - name: DB_USERNAME

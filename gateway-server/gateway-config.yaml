@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: gateway-config
+
+data:
+  # Spring profile
+  spring-profiles-active: prod
+
+  # Service URLs
+  member-service-url: http://member-service:8080
+  document-service-url: http://document-service:8080
+  chat-service-url: http://chat-service:8080
+  report-service-url: http://report-service:8080
+  nlp-service-url: http://nlp-service:8080

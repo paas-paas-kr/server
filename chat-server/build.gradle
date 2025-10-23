@@ -1,16 +1,22 @@
+// 1. 이 모듈은 '실행 가능한' Spring Boot 애플리케이션임을 명시
+plugins {
+    id 'org.springframework.boot'
+}
+
+bootJar.enabled = true  // ✅ 실행 가능한 Jar로 만듭니다.
+jar.enabled = false
 
 dependencies {
-	// 필요한 의존성 추가
-    //implementation project(':common')
     // Spring WebFlux: 비동기/논블로킹 방식의 웹 애플리케이션을 만들기 위한 스타터
+
+    implementation project(':common-core')
     implementation("org.springframework.boot:spring-boot-starter-webflux") {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-web"
     }
 
-    // Jackson Databind: 자바 객체 <-> JSON 직렬화/역직렬화를 처리하는 라이브러리
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
-    // Jackson JSR310: Java 8이상의 날짜/시간 API(LocalDate, LocalDateTime 등)를 JSON 변환할 수 있도록 지원하는 모듈
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.23.0'
+
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0'
 }
 

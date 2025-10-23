@@ -33,7 +33,8 @@ public class AppProperties {
     private Stt stt = new Stt();
     private Audio audio = new Audio();
     private Trans trans = new Trans();
-
+    private Llm llm= new Llm();
+    private Vertex vertex = new Vertex();
     @Data
     public static class Stt {
         private String baseUrl;            // https://naveropenapi.apigw.ntruss.com
@@ -76,8 +77,29 @@ public class AppProperties {
         private int readTimeoutMs;
     }
 
+    @Data
+    public static class Llm{
+        private String baseUrl;
+        private int connectionTimeoutMs;
+        private int readTimeoutMs;
+        private String apiKey;
+    }
 
+    @Data
+    public static class Vertex{
+        private String searchBaseUrl;
+        private String projectId;
+        private String location;
+        private String scope;
+        private String dataStoreId;
+        private Http http=new Http();
+    }
 
+    @Data
+    public static class Http{
+        private int connectionTimeoutMs;
+        private int readTimeoutMs;
+    }
     @Data
     public static class Audio {
         private String ffmpegPath;
@@ -96,5 +118,6 @@ public class AppProperties {
             private String sample = "classpath:/mock/sample-tts.ogg";
         }
     }
+
 
 }

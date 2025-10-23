@@ -5,6 +5,7 @@ logging:
     reactor.netty: DEBUG
     org.springframework.web: DEBUG
     org.springframework.web.reactive: DEBUG
+    org.springframework.web.reactive.client.ExchangeFunctions: TRACE
     org.springframework.web.server: DEBUG
     root: info
     com.example.chat: debug
@@ -29,10 +30,21 @@ app:
     target: ko
     connect-timeout-ms: 3000
     read-timeout-ms: 60000
+  llm:
+    base-url: "https://generativelanguage.googleapis.com"
+    connection-timeout-ms: 1000
+    read-timeout-ms: 60000
+  vertex:
+    search-base-url: "https://discoveryengine.googleapis.com"
+    project-id: "paas-paas"
+    location: "global"
+    scope: "https://www.googleapis.com/auth/cloud-platform"
+    http:
+      connection-timeout-ms: 1500
+      read-timeout-ms: 60000
 
 spring:
   main:
     web-application-type: reactive
   config:
     import: "optional:classpath:application-secret.yml"
-

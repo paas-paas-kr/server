@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: document-mysql-service
+
+spec:
+  type: ClusterIP
+  selector:
+    app: document-mysql-db
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306

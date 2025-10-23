@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: chat-deployment
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: chat-app
+
+  template:
+    metadata:
+      labels:
+        app: chat-app
+    spec:
+      containers:
+        - name: chat-container
+          image: paaspaas.kr.ncr.ntruss.com/chat-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+      imagePullSecrets:
+        - name: chat-server-image-secret

@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: member-deployment
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: member-app
+
+  template:
+    metadata:
+      labels:
+        app: member-app
+    spec:
+      containers:
+        - name: member-container
+          image: paaspaas.kr.ncr.ntruss.com/member-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+          env:
+            # ConfigMap에서 가져오는 환경 변수
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: member-config
+                  key: spring-profiles-active
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: member-config
+                  key: db-host
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: member-config
+                  key: db-port
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: member-config
+                  key: db-name
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: member-config
+                  key: redis-host
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: member-config
+                  key: redis-port
+            - name: GATEWAY_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: member-config
+                  key: gateway-service-url
+            - name : JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: member-secret
+                  key: jwt-secret
+            - name : DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: member-secret
+                  key: db-username
+            - name : DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: member-secret
+                  key: db-password
+      imagePullSecrets:
+        - name: member-server-image-secret

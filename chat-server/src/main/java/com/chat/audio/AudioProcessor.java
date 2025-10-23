@@ -93,7 +93,7 @@ public class AudioProcessor {
                 })  // 번역 (papago 질의)
                 // .flatMap(llm:ask)               // LLM 질의
                 .doOnNext(text -> {
-                    log.info("[PROC:{}] STT: {}", sessionId, text);
+                    log.info("[PROC:{}] TRANS: {}", sessionId, text);
                     emitter.emitText(chat("TRANS", text));
                 })
                 .doOnError(e -> {

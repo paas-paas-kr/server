@@ -30,6 +30,18 @@ app:
     target: ko
     connect-timeout-ms: 3000
     read-timeout-ms: 60000
+  llm:
+    base-url: "https://generativelanguage.googleapis.com"
+    connection-timeout-ms: 1000
+    read-timeout-ms: 60000
+  vertex:
+    search-base-url: "https://discoveryengine.googleapis.com"
+    project-id: "paas-paas"
+    location: "global"
+    scope: "https://www.googleapis.com/auth/cloud-platform"
+    http:
+      connection-timeout-ms: 1500
+      read-timeout-ms: 60000
 
 spring:
   main:

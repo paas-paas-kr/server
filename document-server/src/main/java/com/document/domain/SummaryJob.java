@@ -32,6 +32,9 @@ public class SummaryJob {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(nullable = false)
+	private Long userId;
+
 	@OneToMany(mappedBy = "job", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Document> documents = new ArrayList<>();
 
@@ -52,15 +55,17 @@ public class SummaryJob {
 	private LocalDateTime completedAt;
 
 	@Builder(access = AccessLevel.PRIVATE)
-	private SummaryJob(String summaryLanguage, JobStatus status) {
+	private SummaryJob(Long userId, String summaryLanguage, JobStatus status) {
+		this.userId = userId;
 		this.summaryLanguage = summaryLanguage;
 		this.status = status;
 		this.statusMessage = status.getMessage();
 		this.startedAt = LocalDateTime.now();
 	}
 
-	public static SummaryJob of(String summaryLanguage) {
+	public static SummaryJob of(Long userId, String summaryLanguage) {
 		return SummaryJob.builder()
+			.userId(userId)
 			.summaryLanguage(summaryLanguage)
 			.status(JobStatus.PENDING)
 			.build();

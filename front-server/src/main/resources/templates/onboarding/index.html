@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>환영합니다 - 다문화 가정 상담 서비스</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .onboarding-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fed7aa 100%);
+        }
+
+        .onboarding-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .onboarding-logo {
+            font-size: 80px;
+            margin-bottom: 32px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .onboarding-title {
+            font-size: 36px;
+            font-weight: 800;
+            color: #92400e;
+            text-align: center;
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .onboarding-subtitle {
+            font-size: 18px;
+            color: #78350f;
+            text-align: center;
+            margin-bottom: 48px;
+            line-height: 1.6;
+        }
+
+        .onboarding-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            width: 100%;
+            margin-bottom: 48px;
+        }
+
+        .onboarding-feature {
+            background: white;
+            border-radius: 24px;
+            padding: 32px 24px;
+            text-align: center;
+            box-shadow: 0 10px 30px -5px rgba(217, 119, 6, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .onboarding-feature:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -5px rgba(217, 119, 6, 0.3);
+        }
+
+        .onboarding-feature-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .onboarding-feature-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 8px;
+        }
+
+        .onboarding-feature-desc {
+            font-size: 14px;
+            color: #78350f;
+            line-height: 1.5;
+        }
+
+        .onboarding-button {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 18px 48px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 30px -5px rgba(245, 158, 11, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .onboarding-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px -5px rgba(245, 158, 11, 0.6);
+        }
+
+        .onboarding-skip {
+            margin-top: 20px;
+            color: #a16207;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .onboarding-skip:hover {
+            color: #78350f;
+        }
+    </style>
+</head>
+<body>
+    <div class="onboarding-container">
+        <div class="onboarding-content">
+            <div class="onboarding-logo">🌏</div>
+            <h1 class="onboarding-title" data-i18n="onboarding.title">
+                다문화 가정을 위한<br>AI 상담 서비스
+            </h1>
+            <p class="onboarding-subtitle" data-i18n="onboarding.subtitle">
+                언어와 문화의 장벽을 넘어, 필요한 도움을 쉽고 빠르게 받으세요
+            </p>
+
+            <div class="onboarding-features">
+                <div class="onboarding-feature">
+                    <div class="onboarding-feature-icon">💬</div>
+                    <div class="onboarding-feature-title" data-i18n="onboarding.feature1.title">AI 상담</div>
+                    <div class="onboarding-feature-desc" data-i18n="onboarding.feature1.desc">
+                        24시간 언제든지 AI와<br>상담하세요
+                    </div>
+                </div>
+                <div class="onboarding-feature">
+                    <div class="onboarding-feature-icon">📄</div>
+                    <div class="onboarding-feature-title" data-i18n="onboarding.feature2.title">문서 요약</div>
+                    <div class="onboarding-feature-desc" data-i18n="onboarding.feature2.desc">
+                        복잡한 서류를 쉽게<br>이해하세요
+                    </div>
+                </div>
+                <div class="onboarding-feature">
+                    <div class="onboarding-feature-icon">🌐</div>
+                    <div class="onboarding-feature-title" data-i18n="onboarding.feature3.title">다국어 지원</div>
+                    <div class="onboarding-feature-desc" data-i18n="onboarding.feature3.desc">
+                        모국어로 편하게<br>소통하세요
+                    </div>
+                </div>
+            </div>
+
+            <button class="onboarding-button" onclick="startService()" data-i18n="onboarding.startButton">
+                시작하기
+            </button>
+            <div class="onboarding-skip" onclick="skipOnboarding()" data-i18n="onboarding.skip">
+                건너뛰기
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/i18n.js"></script>
+    <script>
+        function startService() {
+            localStorage.setItem('onboardingCompleted', 'true');
+            window.location.href = '/home';
+        }
+
+        function skipOnboarding() {
+            startService();
+        }
+
+        // 페이지 로드 시 로그인 체크 및 언어 적용
+        document.addEventListener('DOMContentLoaded', function() {
+            // 로그인 체크
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            if (!isLoggedIn || isLoggedIn !== 'true') {
+                // 로그인하지 않았으면 로그인 페이지로 리다이렉트
+                window.location.href = '/auth/login';
+                return;
+            }
+
+            // 언어 적용
+            if (window.i18n) {
+                window.i18n.updatePageLanguage();
+            }
+
+            // 이미 온보딩 완료했으면 홈으로 이동
+            const onboardingCompleted = localStorage.getItem('onboardingCompleted');
+            if (onboardingCompleted === 'true') {
+                window.location.href = '/home';
+            }
+        });
+    </script>
+</body>
+</html>

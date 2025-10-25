@@ -6,4 +6,5 @@ include 'document-server'
 include 'nlp-server'
 include 'member-server'
 include 'report-server'
+include 'front-server'
 

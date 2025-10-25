@@ -38,7 +38,14 @@ public class AuthService {
         String encodedPassword = passwordEncoder.encode(request.password());
 
         // 회원 생성
-        Member member = Member.of(request.email(),encodedPassword, request.name(), Member.MemberRole.USER, Member.MemberStatus.ACTIVE);
+        Member member = Member.of(
+            request.email(),
+            encodedPassword,
+            request.name(),
+            Member.MemberRole.USER,
+            Member.MemberStatus.ACTIVE,
+            request.preferredLanguage()
+        );
         Member savedMember = memberRepository.save(member);
 
         return MemberResponse.from(savedMember);
@@ -77,6 +84,19 @@ public class AuthService {
     public MemberResponse getMemberInfo(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> UserException.from(UserErrorCode.USER_NOT_FOUND));
+
+        return MemberResponse.from(member);
+    }
+
+    /**
+     * 언어 설정 변경
+     */
+    @Transactional
+    public MemberResponse updatePreferredLanguage(Long memberId, String preferredLanguage) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> UserException.from(UserErrorCode.USER_NOT_FOUND));
+
+        member.updatePreferredLanguage(preferredLanguage);
 
         return MemberResponse.from(member);
     }

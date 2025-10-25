@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지 - 다문화 가정 상담 서비스</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <!-- 상단 네비게이션 -->
+    <nav class="top-nav">
+        <div class="top-nav-content">
+            <div class="top-nav-logo">
+                <span class="top-nav-logo-icon">🌏</span>
+                <span data-i18n="nav.logo">다문화 가정 지원</span>
+            </div>
+            <div class="top-nav-menu">
+                <a href="/home" class="top-nav-item">
+                    <svg class="top-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span data-i18n="nav.home">홈</span>
+                </a>
+                <a href="/chat" class="top-nav-item">
+                    <svg class="top-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span data-i18n="nav.chat">채팅</span>
+                </a>
+                <a href="/document" class="top-nav-item">
+                    <svg class="top-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span data-i18n="nav.document">문서</span>
+                </a>
+                <a href="/mypage" class="top-nav-item active">
+                    <svg class="top-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span data-i18n="nav.mypage">마이페이지</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-container with-top-nav">
+        <!-- 메인 컨텐츠 -->
+        <div class="app-content">
+            <!-- 다문화 가정 안내 -->
+            <div class="info-box">
+                <h3 style="color: #92400e; font-size: 20px; font-weight: 700; margin-bottom: 12px;" data-i18n="mypage.infoTitle">🌏 다문화 가정을 위한 종합 지원 서비스</h3>
+                <p style="color: #78350f; font-size: 15px; line-height: 1.7;" data-i18n="mypage.infoDesc">
+                    언어와 문화의 차이로 어려움을 겪으시는 다문화 가정을 위해<br>
+                    AI 상담, 문서 요약, 정보 안내 등 다양한 서비스를 제공합니다.
+                </p>
+            </div>
+
+            <!-- 프로필 섹션 -->
+            <div class="card">
+                <div class="profile-section">
+                    <div class="profile-avatar-large" id="profileAvatar">사</div>
+                    <div class="profile-info-large">
+                        <h2 class="profile-name" id="profileName">사용자</h2>
+                        <p class="profile-email" id="profileEmail">user@example.com</p>
+                        <p class="profile-language" id="profileLanguage" style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;">선호 언어: 한국어</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="editProfile()" style="width: auto; padding: 14px 32px;" data-i18n="mypage.editProfile">
+                        프로필 수정
+                    </button>
+                </div>
+            </div>
+
+            <!-- 활동 통계 -->
+            <div class="card">
+                <h2 class="card-title" data-i18n="mypage.stats">활동 통계</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="chatCount">0</div>
+                        <div class="stat-label" data-i18n="mypage.stat.chat">대화</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="messageCount">0</div>
+                        <div class="stat-label" data-i18n="mypage.stat.message">메시지</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="docCount">0</div>
+                        <div class="stat-label" data-i18n="mypage.stat.document">문서</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="daysCount">1</div>
+                        <div class="stat-label" data-i18n="mypage.stat.days">이용일</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 설정 메뉴 -->
+            <div class="card">
+                <h2 class="card-title" data-i18n="mypage.settings">설정</h2>
+                <div class="menu-list">
+                    <a href="#" onclick="showLanguageSetting(); return false;" class="menu-item">
+                        <div class="menu-item-content">
+                            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="2" y1="12" x2="22" y2="12"></line>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            </svg>
+                            <span style="font-weight: 600;" data-i18n="mypage.language">언어 설정</span>
+                        </div>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </a>
+
+                    <a href="#" onclick="showNotificationSetting(); return false;" class="menu-item">
+                        <div class="menu-item-content">
+                            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <span style="font-weight: 600;" data-i18n="mypage.notification">알림 설정</span>
+                        </div>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </a>
+
+                    <a href="#" onclick="clearAllData(); return false;" class="menu-item">
+                        <div class="menu-item-content">
+                            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #ef4444;">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            <span style="font-weight: 600; color: #ef4444;" data-i18n="mypage.deleteData">모든 데이터 삭제</span>
+                        </div>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 도움말 -->
+            <div class="card">
+                <h2 class="card-title" data-i18n="mypage.help">도움말 & 정보</h2>
+                <div class="menu-list">
+                    <a href="#" onclick="showHelp(); return false;" class="menu-item">
+                        <div class="menu-item-content">
+                            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            <span style="font-weight: 600;" data-i18n="mypage.guide">사용 가이드</span>
+                        </div>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </a>
+
+                    <a href="#" onclick="showAbout(); return false;" class="menu-item">
+                        <div class="menu-item-content">
+                            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            <span style="font-weight: 600;" data-i18n="mypage.about">앱 정보</span>
+                        </div>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 로그아웃 버튼 -->
+            <button class="btn btn-primary" onclick="logout()" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 10px 30px -5px rgba(239, 68, 68, 0.3);" data-i18n="mypage.logout">
+                로그아웃
+            </button>
+        </div>
+    </div>
+
+    <!-- 언어 설정 모달 -->
+    <div id="languageModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">언어 설정</h2>
+                <button class="modal-close" onclick="closeLanguageModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button class="language-option" onclick="selectLanguage('한국어')">
+                        <span style="font-size: 24px; margin-right: 12px;">🇰🇷</span>
+                        <span style="font-weight: 600;">한국어</span>
+                    </button>
+                    <button class="language-option" onclick="selectLanguage('English')">
+                        <span style="font-size: 24px; margin-right: 12px;">🇺🇸</span>
+                        <span style="font-weight: 600;">English</span>
+                    </button>
+                    <button class="language-option" onclick="selectLanguage('中文')">
+                        <span style="font-size: 24px; margin-right: 12px;">🇨🇳</span>
+                        <span style="font-weight: 600;">中文</span>
+                    </button>
+                    <button class="language-option" onclick="selectLanguage('Tiếng Việt')">
+                        <span style="font-size: 24px; margin-right: 12px;">🇻🇳</span>
+                        <span style="font-weight: 600;">Tiếng Việt</span>
+                    </button>
+                    <button class="language-option" onclick="selectLanguage('日本語')">
+                        <span style="font-size: 24px; margin-right: 12px;">🇯🇵</span>
+                        <span style="font-weight: 600;">日本語</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 알림 설정 모달 -->
+    <div id="notificationModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">알림 설정</h2>
+                <button class="modal-close" onclick="closeNotificationModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="padding: 20px; text-align: center;">
+                    <div style="font-size: 64px; margin-bottom: 20px;" id="notificationIcon">🔔</div>
+                    <p style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;" id="notificationStatus">알림이 활성화되어 있습니다</p>
+                    <p style="color: var(--text-secondary); margin-bottom: 32px;">대화 메시지와 문서 요약 완료 시 알림을 받습니다</p>
+                    <button class="btn btn-primary" onclick="toggleNotification()" id="notificationToggleBtn">
+                        알림 끄기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script>
+        // 사용자 정보 로드
+        function loadUserInfo() {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{"name": "사용자", "email": "user@example.com", "preferredLanguage": "ko"}');
+            document.getElementById('profileName').textContent = userInfo.name;
+            document.getElementById('profileEmail').textContent = userInfo.email;
+            document.getElementById('profileAvatar').textContent = userInfo.name.charAt(0);
+
+            // 선호 언어 표시
+            if (userInfo.preferredLanguage) {
+                const langMap = {
+                    'ko': '한국어',
+                    'en': 'English',
+                    'zh': '中文',
+                    'vi': 'Tiếng Việt',
+                    'ja': '日本語'
+                };
+                const langName = langMap[userInfo.preferredLanguage] || '한국어';
+                document.getElementById('profileLanguage').textContent = `선호 언어: ${langName}`;
+            }
+        }
+
+        // 통계 로드
+        function loadStats() {
+            const chatThreads = JSON.parse(localStorage.getItem('chatThreads') || '[]');
+            const documents = JSON.parse(localStorage.getItem('documents') || '[]');
+
+            // 전체 메시지 수 계산
+            const totalMessages = chatThreads.reduce((sum, thread) => {
+                return sum + (thread.messages ? thread.messages.length : 0);
+            }, 0);
+
+            document.getElementById('chatCount').textContent = chatThreads.length;
+            document.getElementById('messageCount').textContent = totalMessages;
+            document.getElementById('docCount').textContent = documents.length;
+
+            // 이용일 수 계산 (간단히 1로 설정, 실제로는 가입일 기준 계산)
+            document.getElementById('daysCount').textContent = '1';
+        }
+
+        // 프로필 편집
+        function editProfile() {
+            const currentName = document.getElementById('profileName').textContent;
+            const currentEmail = document.getElementById('profileEmail').textContent;
+
+            const newName = prompt('이름을 입력하세요:', currentName);
+            if (newName === null || newName.trim() === '') return;
+
+            const newEmail = prompt('이메일을 입력하세요:', currentEmail);
+            if (newEmail === null || newEmail.trim() === '') return;
+
+            const userInfo = {
+                name: newName.trim(),
+                email: newEmail.trim()
+            };
+
+            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+            loadUserInfo();
+            alert('✅ 프로필이 업데이트되었습니다.');
+        }
+
+        // 언어 설정 모달 열기
+        function showLanguageSetting() {
+            document.getElementById('languageModal').classList.add('open');
+        }
+
+        // 언어 설정 모달 닫기
+        function closeLanguageModal() {
+            document.getElementById('languageModal').classList.remove('open');
+        }
+
+        // 언어 선택
+        async function selectLanguage(language) {
+            // 언어 코드 매핑
+            const languageMap = {
+                '한국어': 'ko',
+                'English': 'en',
+                '中文': 'zh',
+                'Tiếng Việt': 'vi',
+                '日本語': 'ja'
+            };
+            const langCode = languageMap[language] || 'ko';
+
+            try {
+                // 서버에 언어 설정 변경 요청
+                const response = await fetch(`${window.API_BASE_URL}/api/auth/language`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        preferredLanguage: langCode
+                    }),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    // 사용자 정보 업데이트
+                    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                    userInfo.preferredLanguage = langCode;
+                    localStorage.setItem('userInfo', JSON.stringify(userInfo));
+
+                    // 로컬 스토리지에도 저장
+                    localStorage.setItem('language', language);
+                    closeLanguageModal();
+
+                    // 페이지 UI 언어 변경
+                    if (window.i18n) {
+                        window.i18n.updatePageLanguage();
+                    }
+
+                    // 프로필 정보 다시 로드
+                    loadUserInfo();
+
+                    alert(`✅ 언어가 "${language}"로 변경되었습니다.\nLanguage changed to "${language}".`);
+                } else {
+                    alert('언어 설정 변경에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Language update error:', error);
+                alert('언어 설정 변경 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 알림 설정 모달 열기
+        function showNotificationSetting() {
+            const enabled = localStorage.getItem('notifications') !== 'false';
+            document.getElementById('notificationIcon').textContent = enabled ? '🔔' : '🔕';
+            document.getElementById('notificationStatus').textContent = enabled ? '알림이 활성화되어 있습니다' : '알림이 비활성화되어 있습니다';
+            document.getElementById('notificationToggleBtn').textContent = enabled ? '알림 끄기' : '알림 켜기';
+            document.getElementById('notificationModal').classList.add('open');
+        }
+
+        // 알림 설정 모달 닫기
+        function closeNotificationModal() {
+            document.getElementById('notificationModal').classList.remove('open');
+        }
+
+        // 알림 토글
+        function toggleNotification() {
+            const enabled = localStorage.getItem('notifications') !== 'false';
+            localStorage.setItem('notifications', enabled ? 'false' : 'true');
+            closeNotificationModal();
+            alert(enabled ? '🔕 알림이 비활성화되었습니다.' : '🔔 알림이 활성화되었습니다.');
+        }
+
+        // 모든 데이터 삭제
+        function clearAllData() {
+            if (!confirm('⚠️ 모든 대화 기록과 문서를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) {
+                return;
+            }
+
+            if (!confirm('정말로 삭제하시겠습니까?\n\n마지막 확인입니다.')) {
+                return;
+            }
+
+            localStorage.removeItem('chatThreads');
+            localStorage.removeItem('documents');
+            alert('✅ 모든 데이터가 삭제되었습니다.');
+            loadStats();
+        }
+
+        // 도움말
+        function showHelp() {
+            alert(`📱 다문화 가정 상담 서비스 사용 가이드
+
+📌 채팅 탭
+• AI 상담사와 실시간으로 대화할 수 있습니다
+• 여러 대화 스레드를 만들어 관리할 수 있습니다
+• 대화 내용은 자동으로 저장됩니다
+
+📌 문서 탭
+• 문서를 업로드하면 AI가 자동으로 요약해줍니다
+• PDF, DOC, DOCX, TXT 파일을 지원합니다
+• 드래그 앤 드롭으로 간편하게 업로드하세요
+• 최대 10MB까지 업로드 가능합니다
+
+📌 마이페이지
+• 프로필과 설정을 관리할 수 있습니다
+• 활동 통계를 확인하세요
+• 언어 설정을 변경할 수 있습니다
+
+💡 추가 질문이 있으시면 채팅을 통해 문의해주세요!`);
+        }
+
+        // 앱 정보
+        function showAbout() {
+            alert(`🌏 다문화 가정 상담 서비스
+
+버전: 1.0.0
+개발: PaaSPaaS Team
+
+다문화 가정을 위한 AI 기반 상담 및
+문서 지원 서비스입니다.
+
+우리는 언어와 문화의 장벽을 넘어
+모든 가정이 필요한 정보와 도움을
+쉽게 받을 수 있도록 돕고 있습니다.
+
+© 2025 All rights reserved.`);
+        }
+
+        // 로그아웃
+        async function logout() {
+            const confirmMsg = getLogoutMessage('confirm');
+            if (confirm(confirmMsg)) {
+                try {
+                    const response = await fetch(`${window.API_BASE_URL}/api/auth/logout`, {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+
+                    // 로컬 스토리지 정리
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('userInfo');
+
+                    const successMsg = getLogoutMessage('success');
+                    alert(successMsg);
+                    window.location.href = '/auth/login';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    // 에러가 발생해도 로컬 정리 후 로그인 페이지로 이동
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('userInfo');
+                    window.location.href = '/auth/login';
+                }
+            }
+        }
+
+        // 로그아웃 메시지 다국어 처리
+        function getLogoutMessage(type) {
+            const messages = {
+                'confirm': {
+                    'ko': '로그아웃하시겠습니까?',
+                    'en': 'Do you want to logout?',
+                    'vi': 'Bạn có muốn đăng xuất?',
+                    'zh': '确定要退出登录吗？',
+                    'ja': 'ログアウトしますか？'
+                },
+                'success': {
+                    'ko': '✅ 로그아웃되었습니다.',
+                    'en': '✅ Logged out successfully.',
+                    'vi': '✅ Đăng xuất thành công.',
+                    'zh': '✅ 退出登录成功。',
+                    'ja': '✅ ログアウトしました。'
+                }
+            };
+
+            const lang = window.i18n ? window.i18n.getLanguageCode(window.i18n.getCurrentLanguage()) : 'ko';
+            return messages[type]?.[lang] || messages[type]?.['ko'] || '';
+        }
+
+        // 페이지 로드 시 정보 로드
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadStats();
+        });
+    </script>
+
+    <script src="/js/i18n.js"></script>
+    <script>
+        // 페이지 로드 시 로그인 체크 및 언어 적용
+        document.addEventListener('DOMContentLoaded', function() {
+            // 로그인 체크
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            if (!isLoggedIn || isLoggedIn !== 'true') {
+                window.location.href = '/auth/login';
+                return;
+            }
+
+            // 언어 적용
+            if (window.i18n) {
+                window.i18n.updatePageLanguage();
+            }
+        });
+    </script>
+</body>
+</html>

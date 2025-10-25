@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - 다문화 가정 상담 서비스</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <div class="auth-logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+                <h1 class="auth-title">다시 만나서 반가워요!</h1>
+                <p class="auth-subtitle">다문화 가정을 위한 AI 상담 서비스</p>
+            </div>
+
+            <form class="auth-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label" for="email">이메일 / Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="your@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">비밀번호 / Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">로그인 / Login</button>
+            </form>
+
+            <div class="auth-link">
+                계정이 없으신가요? / Don't have an account? <br>
+                <a th:href="@{/auth/signup}">회원가입 / Sign up</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script>
+        // 페이지 로드 시 언어 적용 및 로그인 체크
+        document.addEventListener('DOMContentLoaded', function() {
+            // 언어 적용
+            if (window.i18n) {
+                window.i18n.updatePageLanguage();
+            }
+
+            // 이미 로그인되어 있으면 홈으로 이동
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+
+            if (isLoggedIn === 'true') {
+                window.location.href = '/home';
+            }
+        });
+
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // 실제 API 호출
+                const response = await fetch(`${window.API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    }),
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    const errorMsg = getErrorMessage(result.error || 'login.error.failed');
+                    alert(errorMsg);
+                    return;
+                }
+
+                // 사용자 정보 저장
+                if (result.data) {
+                    // 내 정보 조회
+                    const meResponse = await fetch(`${window.API_BASE_URL}/api/auth/me`, {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+
+                    if (meResponse.ok) {
+                        const meResult = await meResponse.json();
+                        const userInfo = meResult.data;
+
+                        localStorage.setItem('userInfo', JSON.stringify({
+                            name: userInfo.name,
+                            email: userInfo.email,
+                            preferredLanguage: userInfo.preferredLanguage
+                        }));
+                        localStorage.setItem('isLoggedIn', 'true');
+
+                        // 사용자의 선호 언어 설정
+                        if (userInfo.preferredLanguage) {
+                            const langMap = {
+                                'ko': '한국어',
+                                'en': 'English',
+                                'zh': '中文',
+                                'vi': 'Tiếng Việt',
+                                'ja': '日本語'
+                            };
+                            const langName = langMap[userInfo.preferredLanguage] || '한국어';
+                            localStorage.setItem('language', langName);
+                        }
+
+                        // 홈 화면으로 이동
+                        window.location.href = '/home';
+                    }
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                const errorMsg = getErrorMessage('login.error.network');
+                alert(errorMsg);
+            }
+        }
+
+        // 에러 메시지 다국어 처리
+        function getErrorMessage(key) {
+            const messages = {
+                'login.error.failed': {
+                    'ko': '이메일 또는 비밀번호가 올바르지 않습니다.',
+                    'en': 'Email or password is incorrect.',
+                    'vi': 'Email hoặc mật khẩu không đúng.',
+                    'zh': '电子邮件或密码不正确。',
+                    'ja': 'メールアドレスまたはパスワードが正しくありません。'
+                },
+                'login.error.network': {
+                    'ko': '로그인에 실패했습니다. 다시 시도해주세요.',
+                    'en': 'Login failed. Please try again.',
+                    'vi': 'Đăng nhập thất bại. Vui lòng thử lại.',
+                    'zh': '登录失败。请重试。',
+                    'ja': 'ログインに失敗しました。もう一度お試しください。'
+                }
+            };
+
+            const lang = window.i18n ? window.i18n.getLanguageCode(window.i18n.getCurrentLanguage()) : 'ko';
+            return messages[key]?.[lang] || messages[key]?.['ko'] || key;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: front-server
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+    mode: HTML
+  profiles:
+    active: local
+
+server:
+  port: 3000

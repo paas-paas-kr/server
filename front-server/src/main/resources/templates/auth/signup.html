@@ -64,6 +64,7 @@
         </div>
     </div>
 
+    <script src="/js/config.js"></script>
     <script src="/js/i18n.js"></script>
     <script>
         // 페이지 로드 시 언어 적용 및 로그인 체크
@@ -104,7 +105,7 @@
 
             try {
                 // 실제 API 호출
-                const response = await fetch('/auth/api/signup', {
+                const response = await fetch(`${window.API_BASE_URL}/api/auth/signup`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -135,7 +136,7 @@
                 }
 
                 // 회원가입 성공 후 자동 로그인
-                const loginResponse = await fetch('/auth/api/login', {
+                const loginResponse = await fetch(`${window.API_BASE_URL}/api/auth/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -151,7 +152,7 @@
                     const loginResult = await loginResponse.json();
 
                     // 내 정보 조회
-                    const meResponse = await fetch('/auth/api/me', {
+                    const meResponse = await fetch(`${window.API_BASE_URL}/api/auth/me`, {
                         method: 'GET',
                         credentials: 'include'
                     });

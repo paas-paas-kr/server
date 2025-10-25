@@ -237,6 +237,7 @@
         </div>
     </div>
 
+    <script src="/js/config.js"></script>
     <script>
         // 사용자 정보 로드
         function loadUserInfo() {
@@ -322,7 +323,7 @@
 
             try {
                 // 서버에 언어 설정 변경 요청
-                const response = await fetch('/auth/api/language', {
+                const response = await fetch(`${window.API_BASE_URL}/api/auth/language`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json'
@@ -444,7 +445,7 @@
             const confirmMsg = getLogoutMessage('confirm');
             if (confirm(confirmMsg)) {
                 try {
-                    const response = await fetch('/auth/api/logout', {
+                    const response = await fetch(`${window.API_BASE_URL}/api/auth/logout`, {
                         method: 'POST',
                         credentials: 'include'
                     });

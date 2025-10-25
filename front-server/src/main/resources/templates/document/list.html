@@ -144,6 +144,7 @@
         </div>
     </div>
 
+    <script src="/js/config.js"></script>
     <script>
         // 선택된 파일들을 저장하는 전역 변수
         let selectedFiles = [];
@@ -151,7 +152,7 @@
         // API에서 문서 목록 가져오기
         async function getDocuments() {
             try {
-                const response = await fetch('/document/api/list', {
+                const response = await fetch(`${window.API_BASE_URL}/api/documents`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -390,17 +391,17 @@
                     files.forEach(file => {
                         formData.append('images', file);
                     });
-                    apiUrl = '/document/api/upload-images';
+                    apiUrl = `${window.API_BASE_URL}/api/documents/upload/images`;
                     console.log('🚀 이미지 API 호출 시작 (여러 파일):', apiUrl, fileCount + '개');
                 } else if (allImages) {
                     // 단일 이미지도 이미지 API 사용
                     formData.append('images', files[0]);
-                    apiUrl = '/document/api/upload-images';
+                    apiUrl = `${window.API_BASE_URL}/api/documents/upload/images`;
                     console.log('🚀 이미지 API 호출 시작 (단일 파일):', apiUrl);
                 } else {
                     // 문서 파일은 문서 업로드 API 사용
                     formData.append('file', files[0]);
-                    apiUrl = '/document/api/upload';
+                    apiUrl = `${window.API_BASE_URL}/api/documents/upload/files`;
                     console.log('🚀 문서 API 호출 시작:', apiUrl);
                 }
 
@@ -498,7 +499,7 @@
         // 요약 보기
         async function viewSummary(jobId) {
             try {
-                const response = await fetch(`/document/api/${jobId}/summary`, {
+                const response = await fetch(`${window.API_BASE_URL}/api/documents/${jobId}/summary`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -529,7 +530,7 @@
         // 상태 확인
         async function checkStatus(jobId) {
             try {
-                const response = await fetch(`/document/api/${jobId}/status`, {
+                const response = await fetch(`${window.API_BASE_URL}/api/documents/${jobId}/status`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'

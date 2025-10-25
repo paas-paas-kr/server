@@ -19,4 +19,16 @@
     }
 
     console.log('API Base URL:', window.API_BASE_URL || 'relative path');
+
+    // API 요청 시 사용할 헤더 생성 함수
+    window.getAuthHeaders = function() {
+        const token = localStorage.getItem('accessToken');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+    };
 })();

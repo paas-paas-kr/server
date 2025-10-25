@@ -64,8 +64,11 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
+            console.log('🔐 로그인 시작:', email);
+
             try {
                 // 실제 API 호출
+                console.log('📤 API 호출:', `${window.API_BASE_URL}/api/auth/login`);
                 const response = await fetch(`${window.API_BASE_URL}/api/auth/login`, {
                     method: 'POST',
                     headers: {
@@ -78,25 +81,39 @@
                     credentials: 'include'
                 });
 
+                console.log('📥 로그인 응답 상태:', response.status);
                 const result = await response.json();
+                console.log('📥 로그인 응답 데이터:', result);
 
                 if (!response.ok) {
+                    console.error('❌ 로그인 실패:', result.error);
                     const errorMsg = getErrorMessage(result.error || 'login.error.failed');
                     alert(errorMsg);
                     return;
                 }
 
-                // 사용자 정보 저장
-                if (result.data) {
+                // JWT 토큰 저장
+                if (result.data && result.data.accessToken) {
+                    const token = result.data.accessToken;
+                    localStorage.setItem('accessToken', token);
+                    console.log('✅ JWT 토큰 저장 완료');
+
+                    console.log('✅ 로그인 성공, 사용자 정보 조회 중...');
                     // 내 정보 조회
                     const meResponse = await fetch(`${window.API_BASE_URL}/api/auth/me`, {
                         method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
                         credentials: 'include'
                     });
+
+                    console.log('📥 /me 응답 상태:', meResponse.status);
 
                     if (meResponse.ok) {
                         const meResult = await meResponse.json();
                         const userInfo = meResult.data;
+                        console.log('✅ 사용자 정보:', userInfo);
 
                         localStorage.setItem('userInfo', JSON.stringify({
                             name: userInfo.name,
@@ -119,11 +136,20 @@
                         }
 
                         // 홈 화면으로 이동
+                        console.log('🏠 홈 화면으로 이동:', '/home');
                         window.location.href = '/home';
+                    } else {
+                        console.error('❌ /me 호출 실패:', meResponse.status);
+                        const meError = await meResponse.text();
+                        console.error('에러 내용:', meError);
+                        alert('사용자 정보를 가져오는데 실패했습니다.');
                     }
+                } else {
+                    console.error('❌ result.data가 없음:', result);
+                    alert('로그인 응답에 데이터가 없습니다.');
                 }
             } catch (error) {
-                console.error('Login error:', error);
+                console.error('❌ Login error:', error);
                 const errorMsg = getErrorMessage('login.error.network');
                 alert(errorMsg);
             }

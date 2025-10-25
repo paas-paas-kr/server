@@ -154,9 +154,7 @@
             try {
                 const response = await fetch(`${window.API_BASE_URL}/api/documents`, {
                     method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: window.getAuthHeaders(),
                     credentials: 'include'
                 });
 
@@ -407,8 +405,16 @@
 
                 formData.append('language', currentLang);
 
+                // FormData 사용 시 Authorization 헤더만 추가 (Content-Type은 자동 설정됨)
+                const token = localStorage.getItem('accessToken');
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
                 const response = await fetch(apiUrl, {
                     method: 'POST',
+                    headers: headers,
                     body: formData,
                     credentials: 'include'
                 });
@@ -501,9 +507,7 @@
             try {
                 const response = await fetch(`${window.API_BASE_URL}/api/documents/${jobId}/summary`, {
                     method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: window.getAuthHeaders(),
                     credentials: 'include'
                 });
 
@@ -532,9 +536,7 @@
             try {
                 const response = await fetch(`${window.API_BASE_URL}/api/documents/${jobId}/status`, {
                     method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: window.getAuthHeaders(),
                     credentials: 'include'
                 });
 

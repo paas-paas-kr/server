@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>문서 요약 - 다문화 가정 상담 서비스</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
 </head>
 <body>
     <!-- 상단 네비게이션 -->
@@ -376,10 +377,6 @@
             `;
 
             try {
-                // 현재 언어 설정 가져오기
-                const currentLang = window.i18n ? window.i18n.getLanguageCode(window.i18n.getCurrentLanguage()) : 'ko';
-                console.log('🌐 언어 설정:', currentLang);
-
                 // 실제 API 호출
                 const formData = new FormData();
 
@@ -402,8 +399,6 @@
                     apiUrl = `${window.API_BASE_URL}/api/documents/upload/files`;
                     console.log('🚀 문서 API 호출 시작:', apiUrl);
                 }
-
-                formData.append('language', currentLang);
 
                 // FormData 사용 시 Authorization 헤더만 추가 (Content-Type은 자동 설정됨)
                 const token = localStorage.getItem('accessToken');
@@ -518,10 +513,13 @@
                 const result = await response.json();
                 const summary = result.data.summary;
 
+                // 마크다운을 HTML로 변환
+                const htmlContent = marked.parse(summary);
+
                 document.getElementById('modalTitle').textContent = '문서 요약';
                 document.getElementById('modalContent').innerHTML = `
-                    <div style="white-space: pre-wrap; line-height: 1.8; color: #1f2937;">
-                        ${summary}
+                    <div class="markdown-content">
+                        ${htmlContent}
                     </div>
                 `;
                 document.getElementById('summaryModal').classList.add('open');

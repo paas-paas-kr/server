@@ -1,5 +1,6 @@
 package com.common.security;
 
+import com.common.enumtype.Language;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -14,9 +15,10 @@ public class GatewayUserDetails implements Serializable {
 
     private final Long userId;
     private final String email;
+    private final Language preferredLanguage;
 
     @Override
     public String toString() {
-        return "User{id=" + userId + ", email=" + email + "}";
+        return "User{id=" + userId + ", email=" + email + ", language=" + preferredLanguage + "}";
     }
 }

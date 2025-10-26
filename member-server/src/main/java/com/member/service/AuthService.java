@@ -1,6 +1,7 @@
 package com.member.service;
 
 import com.common.dto.TokenResponse;
+import com.common.enumtype.Language;
 
 import com.member.domain.Member;
 import com.member.dto.LoginRequest;
@@ -71,7 +72,12 @@ public class AuthService {
         }
 
         // JWT 토큰 생성
-        String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getEmail(), member.getRole().name());
+        String accessToken = jwtTokenProvider.generateAccessToken(
+            member.getId(),
+            member.getEmail(),
+            member.getRole().name(),
+            member.getPreferredLanguage().name()
+        );
         String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
 
         return TokenResponse.of(accessToken, refreshToken, jwtTokenProvider.getExpirationTime() / 1000);
@@ -92,7 +98,7 @@ public class AuthService {
      * 언어 설정 변경
      */
     @Transactional
-    public MemberResponse updatePreferredLanguage(Long memberId, String preferredLanguage) {
+    public MemberResponse updatePreferredLanguage(Long memberId, Language preferredLanguage) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> UserException.from(UserErrorCode.USER_NOT_FOUND));
 

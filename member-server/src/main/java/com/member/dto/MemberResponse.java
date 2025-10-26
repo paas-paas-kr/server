@@ -22,7 +22,7 @@ public record MemberResponse(
                 member.getName(),
                 member.getRole().name(),
                 member.getStatus().name(),
-                member.getPreferredLanguage(),
+                member.getPreferredLanguage().name(), // Language enum -> String (KOREAN, ENGLISH, etc.)
                 member.getCreatedAt()
         );
     }

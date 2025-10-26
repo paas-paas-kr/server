@@ -125,11 +125,11 @@
                         // 사용자의 선호 언어 설정
                         if (userInfo.preferredLanguage) {
                             const langMap = {
-                                'ko': '한국어',
-                                'en': 'English',
-                                'zh': '中文',
-                                'vi': 'Tiếng Việt',
-                                'ja': '日本語'
+                                'KOREAN': '한국어',
+                                'ENGLISH': 'English',
+                                'CHINESE': '中文',
+                                'VIETNAMESE': 'Tiếng Việt',
+                                'JAPANESE': '日本語'
                             };
                             const langName = langMap[userInfo.preferredLanguage] || '한국어';
                             localStorage.setItem('language', langName);

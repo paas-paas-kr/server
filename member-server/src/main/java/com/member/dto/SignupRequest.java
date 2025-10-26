@@ -1,7 +1,9 @@
 package com.member.dto;
 
+import com.common.enumtype.Language;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record SignupRequest(
@@ -18,8 +20,7 @@ public record SignupRequest(
 	@Size(min = 2, max = 50, message = "이름은 2자 이상 50자 이하여야 합니다")
 	String name,
 
-	@NotBlank(message = "선호 언어는 필수입니다")
-	@Size(min = 2, max = 10, message = "선호 언어는 2자 이상 10자 이하여야 합니다")
-	String preferredLanguage
+	@NotNull(message = "선호 언어는 필수입니다")
+	Language preferredLanguage
 ) {
 }

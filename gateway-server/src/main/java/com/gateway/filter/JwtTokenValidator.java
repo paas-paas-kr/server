@@ -57,6 +57,15 @@ public class JwtTokenValidator {
     }
 
     /**
+     * Token에서 언어(Language) 추출
+     */
+    public String getLanguageFromToken(String token) {
+        Claims claims = parseClaims(token);
+        String language = claims.get("language", String.class);
+        return language != null ? language : "KOREAN";  // 기본값 KOREAN
+    }
+
+    /**
      * Token 유효성 검증
      */
     public boolean validateToken(String token) {

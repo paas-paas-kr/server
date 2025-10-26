@@ -1,5 +1,6 @@
 package com.common.security;
 
+import com.common.enumtype.Language;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +26,7 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
     private static final String USER_ID_HEADER = "X-User-Id";
     private static final String USER_EMAIL_HEADER = "X-User-Email";
     private static final String USER_ROLE_HEADER = "X-User-Role";
+    private static final String USER_LANGUAGE_HEADER = "X-User-Language";
 
     private final AuthenticationEntryPoint authenticationEntryPoint;
 
@@ -50,16 +52,28 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
         String userId = request.getHeader(USER_ID_HEADER);
         String userEmail = request.getHeader(USER_EMAIL_HEADER);
         String userRole = request.getHeader(USER_ROLE_HEADER);
+        String userLanguage = request.getHeader(USER_LANGUAGE_HEADER);
 
         try {
             if (userId == null || userEmail == null) {
                 throw new MissingAuthenticationHeaderException("필요한 인증 헤더가 누락되었습니다.");
             }
 
+            // Language enum 변환 (기본값: KOREAN)
+            Language language = Language.KOREAN;
+            if (userLanguage != null && !userLanguage.isEmpty()) {
+                try {
+                    language = Language.valueOf(userLanguage);
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid language header value: {}, using default KOREAN", userLanguage);
+                }
+            }
+
             // Gateway에서 전달받은 사용자 정보로 인증 객체 생성
             GatewayUserDetails userDetails = new GatewayUserDetails(
                 Long.parseLong(userId),
-                userEmail
+                userEmail,
+                language
             );
 
             // 역할(Role) 기반 권한 설정

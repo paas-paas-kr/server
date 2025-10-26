@@ -46,11 +46,11 @@
                 <div class="form-group">
                     <label class="form-label" for="preferredLanguage">선호 언어 / Preferred Language</label>
                     <select id="preferredLanguage" class="form-input" required>
-                        <option value="ko">한국어 (Korean)</option>
-                        <option value="en">English</option>
-                        <option value="zh">中文 (Chinese)</option>
-                        <option value="vi">Tiếng Việt (Vietnamese)</option>
-                        <option value="ja">日本語 (Japanese)</option>
+                        <option value="KOREAN">한국어 (Korean)</option>
+                        <option value="ENGLISH">English</option>
+                        <option value="CHINESE">中文 (Chinese)</option>
+                        <option value="VIETNAMESE">Tiếng Việt (Vietnamese)</option>
+                        <option value="JAPANESE">日本語 (Japanese)</option>
                     </select>
                 </div>
 
@@ -193,11 +193,11 @@
                         // 사용자의 선호 언어 설정
                         if (userInfo.preferredLanguage) {
                             const langMap = {
-                                'ko': '한국어',
-                                'en': 'English',
-                                'zh': '中文',
-                                'vi': 'Tiếng Việt',
-                                'ja': '日本語'
+                                'KOREAN': '한국어',
+                                'ENGLISH': 'English',
+                                'CHINESE': '中文',
+                                'VIETNAMESE': 'Tiếng Việt',
+                                'JAPANESE': '日本語'
                             };
                             const langName = langMap[userInfo.preferredLanguage] || '한국어';
                             localStorage.setItem('language', langName);

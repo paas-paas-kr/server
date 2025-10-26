@@ -1,5 +1,6 @@
 package com.document.controller;
 
+import com.common.enumtype.Language;
 import com.common.response.DataResponse;
 import com.common.security.GatewayUserDetails;
 import com.document.command.UploadDocument;
@@ -45,11 +46,10 @@ public class DocumentController {
 	@Operation(summary = "문서 업로드", description = "단일 문서를 업로드하고 요약 작업을 시작합니다. (JWT 필요)")
 	public ResponseEntity<DataResponse<UploadResponse>> uploadDocument(
 			@AuthenticationPrincipal GatewayUserDetails userDetails,
-			@Valid @RequestParam(value = "file", required = true) MultipartFile file,
-			@Valid @RequestParam(value = "language", required = false, defaultValue = "ko") String language
+			@Valid @RequestParam(value = "file", required = true) MultipartFile file
 	) {
 		UploadResponse uploadResponse = uploadService.uploadDocument(
-			UploadDocument.of(userDetails.getUserId(), file, language)
+			UploadDocument.of(userDetails.getUserId(), file, userDetails.getPreferredLanguage())
 		);
 		return ResponseEntity.ok(DataResponse.from(uploadResponse));
 	}
@@ -58,11 +58,10 @@ public class DocumentController {
 	@Operation(summary = "이미지 업로드", description = "여러 이미지를 업로드하고 하나의 요약 작업을 시작합니다. 모든 이미지의 텍스트를 추출하여 하나의 요약문을 생성합니다. (JWT 필요)")
 	public ResponseEntity<DataResponse<UploadResponse>> uploadImages(
 			@AuthenticationPrincipal GatewayUserDetails userDetails,
-			@Valid @RequestPart(value = "images", required = true) MultipartFile[] images,
-			@Valid @RequestParam(value = "language", required = false, defaultValue = "ko") String language
+			@Valid @RequestPart(value = "images", required = true) MultipartFile[] images
 	) {
 		UploadResponse uploadResponse = uploadService.uploadImages(
-			UploadImage.of(userDetails.getUserId(), images, language)
+			UploadImage.of(userDetails.getUserId(), images, userDetails.getPreferredLanguage())
 		);
 		return ResponseEntity.ok(DataResponse.from(uploadResponse));
 	}

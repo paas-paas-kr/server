@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.common.enumtype.Language;
 import com.document.domain.enumtype.JobStatus;
 
 @Entity
@@ -42,8 +43,9 @@ public class SummaryJob {
 	@Column(nullable = false)
 	private JobStatus status;
 
+	@Enumerated(EnumType.STRING)
 	@Column
-	private String summaryLanguage; // 요약 언어
+	private Language summaryLanguage; // 요약 언어
 
 	@Column
 	private String statusMessage; // 현재 진행 상태 메시지
@@ -55,7 +57,7 @@ public class SummaryJob {
 	private LocalDateTime completedAt;
 
 	@Builder(access = AccessLevel.PRIVATE)
-	private SummaryJob(Long userId, String summaryLanguage, JobStatus status) {
+	private SummaryJob(Long userId, Language summaryLanguage, JobStatus status) {
 		this.userId = userId;
 		this.summaryLanguage = summaryLanguage;
 		this.status = status;
@@ -63,7 +65,7 @@ public class SummaryJob {
 		this.startedAt = LocalDateTime.now();
 	}
 
-	public static SummaryJob of(Long userId, String summaryLanguage) {
+	public static SummaryJob of(Long userId, Language summaryLanguage) {
 		return SummaryJob.builder()
 			.userId(userId)
 			.summaryLanguage(summaryLanguage)

@@ -73,29 +73,6 @@
                 </div>
             </div>
 
-            <!-- 활동 통계 -->
-            <div class="card">
-                <h2 class="card-title" data-i18n="mypage.stats">활동 통계</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value" id="chatCount">0</div>
-                        <div class="stat-label" data-i18n="mypage.stat.chat">대화</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="messageCount">0</div>
-                        <div class="stat-label" data-i18n="mypage.stat.message">메시지</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="docCount">0</div>
-                        <div class="stat-label" data-i18n="mypage.stat.document">문서</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="daysCount">1</div>
-                        <div class="stat-label" data-i18n="mypage.stat.days">이용일</div>
-                    </div>
-                </div>
-            </div>
-
             <!-- 설정 메뉴 -->
             <div class="card">
                 <h2 class="card-title" data-i18n="mypage.settings">설정</h2>
@@ -260,24 +237,6 @@
             }
         }
 
-        // 통계 로드
-        function loadStats() {
-            const chatThreads = JSON.parse(localStorage.getItem('chatThreads') || '[]');
-            const documents = JSON.parse(localStorage.getItem('documents') || '[]');
-
-            // 전체 메시지 수 계산
-            const totalMessages = chatThreads.reduce((sum, thread) => {
-                return sum + (thread.messages ? thread.messages.length : 0);
-            }, 0);
-
-            document.getElementById('chatCount').textContent = chatThreads.length;
-            document.getElementById('messageCount').textContent = totalMessages;
-            document.getElementById('docCount').textContent = documents.length;
-
-            // 이용일 수 계산 (간단히 1로 설정, 실제로는 가입일 기준 계산)
-            document.getElementById('daysCount').textContent = '1';
-        }
-
         // 프로필 편집
         function editProfile() {
             const currentName = document.getElementById('profileName').textContent;
@@ -313,13 +272,13 @@
         async function selectLanguage(language) {
             // 언어 코드 매핑
             const languageMap = {
-                '한국어': 'ko',
-                'English': 'en',
-                '中文': 'zh',
-                'Tiếng Việt': 'vi',
-                '日本語': 'ja'
+                '한국어': 'KOREAN',
+                'English': 'ENGLISH',
+                '中文': 'CHINESE',
+                'Tiếng Việt': 'VIETNAMESE',
+                '日本語': 'JAPANESE'
             };
-            const langCode = languageMap[language] || 'ko';
+            const langEnum = languageMap[language] || 'KOREAN';
 
             try {
                 // 서버에 언어 설정 변경 요청
@@ -327,7 +286,7 @@
                     method: 'PATCH',
                     headers: window.getAuthHeaders(),
                     body: JSON.stringify({
-                        preferredLanguage: langCode
+                        preferredLanguage: langEnum
                     }),
                     credentials: 'include'
                 });
@@ -335,7 +294,7 @@
                 if (response.ok) {
                     // 사용자 정보 업데이트
                     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-                    userInfo.preferredLanguage = langCode;
+                    userInfo.preferredLanguage = langEnum;
                     localStorage.setItem('userInfo', JSON.stringify(userInfo));
 
                     // 로컬 스토리지에도 저장
@@ -395,7 +354,6 @@
             localStorage.removeItem('chatThreads');
             localStorage.removeItem('documents');
             alert('✅ 모든 데이터가 삭제되었습니다.');
-            loadStats();
         }
 
         // 도움말
@@ -415,7 +373,6 @@
 
 📌 마이페이지
 • 프로필과 설정을 관리할 수 있습니다
-• 활동 통계를 확인하세요
 • 언어 설정을 변경할 수 있습니다
 
 💡 추가 질문이 있으시면 채팅을 통해 문의해주세요!`);
@@ -494,7 +451,6 @@
         // 페이지 로드 시 정보 로드
         document.addEventListener('DOMContentLoaded', function() {
             loadUserInfo();
-            loadStats();
         });
     </script>
 

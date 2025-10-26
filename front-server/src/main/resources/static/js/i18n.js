@@ -80,11 +80,6 @@
             'mypage.infoTitle': '다문화 가정을 위한 종합 지원 서비스',
             'mypage.infoDesc': '언어와 문화의 차이로 어려움을 겪으시는 다문화 가정을 위해\nAI 상담, 문서 요약, 정보 안내 등 다양한 서비스를 제공합니다.',
             'mypage.editProfile': '프로필 수정',
-            'mypage.stats': '활동 통계',
-            'mypage.stat.chat': '대화',
-            'mypage.stat.message': '메시지',
-            'mypage.stat.document': '문서',
-            'mypage.stat.days': '이용일',
             'mypage.settings': '설정',
             'mypage.language': '언어 설정',
             'mypage.notification': '알림 설정',
@@ -172,11 +167,6 @@
             'mypage.infoTitle': 'Comprehensive Support for Multicultural Families',
             'mypage.infoDesc': 'For multicultural families facing language and cultural challenges,\nwe provide AI consultation, document summary, and information services.',
             'mypage.editProfile': 'Edit Profile',
-            'mypage.stats': 'Activity Stats',
-            'mypage.stat.chat': 'Chats',
-            'mypage.stat.message': 'Messages',
-            'mypage.stat.document': 'Documents',
-            'mypage.stat.days': 'Days',
             'mypage.settings': 'Settings',
             'mypage.language': 'Language',
             'mypage.notification': 'Notifications',
@@ -264,11 +254,6 @@
             'mypage.infoTitle': 'Hỗ trợ toàn diện cho gia đình đa văn hóa',
             'mypage.infoDesc': 'Cho các gia đình đa văn hóa đối mặt với thách thức ngôn ngữ và văn hóa,\nchúng tôi cung cấp tư vấn AI, tóm tắt tài liệu và dịch vụ thông tin.',
             'mypage.editProfile': 'Chỉnh sửa hồ sơ',
-            'mypage.stats': 'Thống kê hoạt động',
-            'mypage.stat.chat': 'Trò chuyện',
-            'mypage.stat.message': 'Tin nhắn',
-            'mypage.stat.document': 'Tài liệu',
-            'mypage.stat.days': 'Ngày',
             'mypage.settings': 'Cài đặt',
             'mypage.language': 'Ngôn ngữ',
             'mypage.notification': 'Thông báo',
@@ -356,11 +341,6 @@
             'mypage.infoTitle': '多元文化家庭综合支持',
             'mypage.infoDesc': '对于面临语言和文化挑战的多元文化家庭，\n我们提供AI咨询、文档摘要和信息服务。',
             'mypage.editProfile': '编辑个人资料',
-            'mypage.stats': '活动统计',
-            'mypage.stat.chat': '对话',
-            'mypage.stat.message': '消息',
-            'mypage.stat.document': '文档',
-            'mypage.stat.days': '天数',
             'mypage.settings': '设置',
             'mypage.language': '语言',
             'mypage.notification': '通知',
@@ -448,11 +428,6 @@
             'mypage.infoTitle': '多文化家族への総合サポート',
             'mypage.infoDesc': '言語と文化の課題に直面している多文化家族のために、\nAI相談、書類要約、情報サービスを提供します。',
             'mypage.editProfile': 'プロフィール編集',
-            'mypage.stats': '活動統計',
-            'mypage.stat.chat': '会話',
-            'mypage.stat.message': 'メッセージ',
-            'mypage.stat.document': '書類',
-            'mypage.stat.days': '日数',
             'mypage.settings': '設定',
             'mypage.language': '言語',
             'mypage.notification': '通知',
@@ -466,7 +441,7 @@
 
     // 현재 언어 가져오기
     function getCurrentLanguage() {
-        return localStorage.getItem('language') || 'ko';
+        return localStorage.getItem('language') || '한국어';
     }
 
     // 언어 설정
@@ -481,16 +456,16 @@
         return translations[langCode]?.[key] || translations['ko'][key] || key;
     }
 
-    // 언어 이름을 코드로 변환
+    // 언어 이름을 enum 이름으로 변환
     function getLanguageCode(langName) {
         const langMap = {
-            '한국어': 'ko',
-            'English': 'en',
-            '中文': 'zh',
-            'Tiếng Việt': 'vi',
-            '日本語': 'ja'
+            '한국어': 'KOREAN',
+            'English': 'ENGLISH',
+            '中文': 'CHINESE',
+            'Tiếng Việt': 'VIETNAMESE',
+            '日本語': 'JAPANESE'
         };
-        return langMap[langName] || langName;
+        return langMap[langName] || 'KOREAN';
     }
 
     // 페이지의 모든 data-i18n 요소 업데이트

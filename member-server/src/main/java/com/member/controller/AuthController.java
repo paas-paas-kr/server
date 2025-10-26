@@ -52,12 +52,12 @@ public class AuthController {
     }
 
     @PatchMapping("/language")
-    @Operation(summary = "언어 설정 변경", description = "사용자의 선호 언어 설정을 변경합니다. (JWT 필요)")
-    public ResponseEntity<DataResponse<MemberResponse>> updateLanguage(
+    @Operation(summary = "언어 설정 변경", description = "사용자의 선호 언어 설정을 변경하고 새로운 JWT 토큰을 발급합니다. (JWT 필요)")
+    public ResponseEntity<DataResponse<TokenResponse>> updateLanguage(
             @AuthenticationPrincipal GatewayUserDetails userDetails,
             @Valid @RequestBody UpdateLanguageRequest request
     ) {
-        MemberResponse response = authService.updatePreferredLanguage(
+        TokenResponse response = authService.updatePreferredLanguageAndReissueToken(
                 userDetails.getUserId(),
                 request.preferredLanguage()
         );

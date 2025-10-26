@@ -299,6 +299,12 @@
                     const result = await response.json();
                     console.log('✅ 언어 변경 성공:', result);
 
+                    // 새로운 JWT 토큰 저장
+                    if (result.data && result.data.accessToken) {
+                        localStorage.setItem('accessToken', result.data.accessToken);
+                        console.log('✅ 새로운 JWT 토큰 저장 완료');
+                    }
+
                     // 사용자 정보 업데이트
                     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
                     userInfo.preferredLanguage = langEnum;

@@ -106,4 +106,26 @@ public class AuthService {
 
         return MemberResponse.from(member);
     }
+
+    /**
+     * 언어 설정 변경 및 새로운 JWT 토큰 발급
+     */
+    @Transactional
+    public TokenResponse updatePreferredLanguageAndReissueToken(Long memberId, Language preferredLanguage) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> UserException.from(UserErrorCode.USER_NOT_FOUND));
+
+        member.updatePreferredLanguage(preferredLanguage);
+
+        // 새로운 JWT 토큰 생성 (변경된 언어 정보 포함)
+        String accessToken = jwtTokenProvider.generateAccessToken(
+            member.getId(),
+            member.getEmail(),
+            member.getRole().name(),
+            member.getPreferredLanguage().name()
+        );
+        String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
+
+        return TokenResponse.of(accessToken, refreshToken, jwtTokenProvider.getExpirationTime() / 1000);
+    }
 }

@@ -2,7 +2,7 @@
 (function() {
     // 언어 번역 데이터
     const translations = {
-        'ko': {
+        'KOREAN': {
             // 온보딩
             'onboarding.title': '다문화 가정을 위한\nAI 상담 서비스',
             'onboarding.subtitle': '언어와 문화의 장벽을 넘어, 필요한 도움을 쉽고 빠르게 받으세요',
@@ -89,7 +89,7 @@
             'mypage.about': '앱 정보',
             'mypage.logout': '로그아웃'
         },
-        'en': {
+        'ENGLISH': {
             // Onboarding
             'onboarding.title': 'AI Consulting Service\nfor Multicultural Families',
             'onboarding.subtitle': 'Get help easily beyond language and cultural barriers',
@@ -176,7 +176,7 @@
             'mypage.about': 'About',
             'mypage.logout': 'Logout'
         },
-        'vi': {
+        'VIETNAMESE': {
             // Onboarding
             'onboarding.title': 'Dịch vụ tư vấn AI\ncho gia đình đa văn hóa',
             'onboarding.subtitle': 'Nhận trợ giúp dễ dàng vượt qua rào cản ngôn ngữ và văn hóa',
@@ -263,7 +263,7 @@
             'mypage.about': 'Giới thiệu',
             'mypage.logout': 'Đăng xuất'
         },
-        'zh': {
+        'CHINESE': {
             // Onboarding
             'onboarding.title': '多元文化家庭\nAI咨询服务',
             'onboarding.subtitle': '轻松跨越语言和文化障碍，获取所需帮助',
@@ -350,7 +350,7 @@
             'mypage.about': '关于',
             'mypage.logout': '退出登录'
         },
-        'ja': {
+        'JAPANESE': {
             // Onboarding
             'onboarding.title': '多文化家族のための\nAI相談サービス',
             'onboarding.subtitle': '言語と文化の壁を越えて、必要な支援を簡単に受けられます',
@@ -453,7 +453,7 @@
     function translate(key, lang) {
         lang = lang || getCurrentLanguage();
         const langCode = getLanguageCode(lang);
-        return translations[langCode]?.[key] || translations['ko'][key] || key;
+        return translations[langCode]?.[key] || translations['KOREAN'][key] || key;
     }
 
     // 언어 이름을 enum 이름으로 변환

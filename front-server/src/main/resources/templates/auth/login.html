@@ -159,23 +159,23 @@
         function getErrorMessage(key) {
             const messages = {
                 'login.error.failed': {
-                    'ko': '이메일 또는 비밀번호가 올바르지 않습니다.',
-                    'en': 'Email or password is incorrect.',
-                    'vi': 'Email hoặc mật khẩu không đúng.',
-                    'zh': '电子邮件或密码不正确。',
-                    'ja': 'メールアドレスまたはパスワードが正しくありません。'
+                    'KOREAN': '이메일 또는 비밀번호가 올바르지 않습니다.',
+                    'ENGLISH': 'Email or password is incorrect.',
+                    'VIETNAMESE': 'Email hoặc mật khẩu không đúng.',
+                    'CHINESE': '电子邮件或密码不正确。',
+                    'JAPANESE': 'メールアドレスまたはパスワードが正しくありません。'
                 },
                 'login.error.network': {
-                    'ko': '로그인에 실패했습니다. 다시 시도해주세요.',
-                    'en': 'Login failed. Please try again.',
-                    'vi': 'Đăng nhập thất bại. Vui lòng thử lại.',
-                    'zh': '登录失败。请重试。',
-                    'ja': 'ログインに失敗しました。もう一度お試しください。'
+                    'KOREAN': '로그인에 실패했습니다. 다시 시도해주세요.',
+                    'ENGLISH': 'Login failed. Please try again.',
+                    'VIETNAMESE': 'Đăng nhập thất bại. Vui lòng thử lại.',
+                    'CHINESE': '登录失败。请重试。',
+                    'JAPANESE': 'ログインに失敗しました。もう一度お試しください。'
                 }
             };
 
-            const lang = window.i18n ? window.i18n.getLanguageCode(window.i18n.getCurrentLanguage()) : 'ko';
-            return messages[key]?.[lang] || messages[key]?.['ko'] || key;
+            const lang = window.i18n ? window.i18n.getLanguageCode(window.i18n.getCurrentLanguage()) : 'KOREAN';
+            return messages[key]?.[lang] || messages[key]?.['KOREAN'] || key;
         }
     </script>
 </body>

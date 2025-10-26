@@ -438,23 +438,23 @@
         function getLogoutMessage(type) {
             const messages = {
                 'confirm': {
-                    'ko': '로그아웃하시겠습니까?',
-                    'en': 'Do you want to logout?',
-                    'vi': 'Bạn có muốn đăng xuất?',
-                    'zh': '确定要退出登录吗？',
-                    'ja': 'ログアウトしますか？'
+                    'KOREAN': '로그아웃하시겠습니까?',
+                    'ENGLISH': 'Do you want to logout?',
+                    'VIETNAMESE': 'Bạn có muốn đăng xuất?',
+                    'CHINESE': '确定要退出登录吗？',
+                    'JAPANESE': 'ログアウトしますか？'
                 },
                 'success': {
-                    'ko': '✅ 로그아웃되었습니다.',
-                    'en': '✅ Logged out successfully.',
-                    'vi': '✅ Đăng xuất thành công.',
-                    'zh': '✅ 退出登录成功。',
-                    'ja': '✅ ログアウトしました。'
+                    'KOREAN': '✅ 로그아웃되었습니다.',
+                    'ENGLISH': '✅ Logged out successfully.',
+                    'VIETNAMESE': '✅ Đăng xuất thành công.',
+                    'CHINESE': '✅ 退出登录成功。',
+                    'JAPANESE': '✅ ログアウトしました。'
                 }
             };
 
-            const lang = window.i18n ? window.i18n.getLanguageCode(window.i18n.getCurrentLanguage()) : 'ko';
-            return messages[type]?.[lang] || messages[type]?.['ko'] || '';
+            const lang = window.i18n ? window.i18n.getLanguageCode(window.i18n.getCurrentLanguage()) : 'KOREAN';
+            return messages[type]?.[lang] || messages[type]?.['KOREAN'] || '';
         }
 
         // 페이지 로드 시 정보 로드

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Chat + Voice (WebSocket Demo)</title>
+    <style>
+        :root { --gap: 12px; }
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
+        h1 { margin: 0 0 var(--gap) 0; font-size: 20px; }
+        h2 { margin: 18px 0 10px; font-size: 16px; }
+        .row { display: flex; gap: var(--gap); align-items: center; margin-bottom: var(--gap); flex-wrap: wrap; }
+        button { padding: 10px 14px; border-radius: 10px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+        button:disabled { opacity: .5; cursor: not-allowed; }
+        select, input { padding: 8px 10px; border-radius: 8px; border: 1px solid #ddd; }
+        label { font-size: 14px; }
+        .pill { padding: 4px 8px; border: 1px solid #eee; border-radius: 999px; font-size: 12px; background: #f6f6f6; }
+        .log { height: 260px; overflow: auto; background: #fafafa; border: 1px solid #eee; padding: 12px; border-radius: 10px; white-space: pre-wrap; font-size: 13px; }
+        .section { border: 1px solid #eee; border-radius: 12px; padding: 14px; margin-bottom: 16px; background: #fff; }
+        audio { width: 100%; margin-top: 6px; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    </style>
+</head>
+<body>
+<h1>WebSocket: Chat + Voice</h1>
+
+<!-- 공통 설정 -->
+<div class="section">
+    <h2>설정</h2>
+    <div class="row">
+        <label>Language:</label>
+        <select id="lang" required>
+            <option value="" disabled selected>언어 선택</option>
+            <option value="Kor">Kor</option>
+            <option value="Eng">Eng</option>
+            <option value="Jpn">Jpn</option>
+            <option value="Chn">Chn</option>
+        </select>
+    </div>
+</div>
+<!-- 채팅 -->
+<div class="section">
+    <h2>채팅</h2>
+    <div class="row">
+        <label>WS Chat URL:</label>
+        <input id="ws-url-chat" size="40" />
+        <button id="btn-chat-connect">Connect</button>
+        <button id="btn-chat-disconnect" disabled>Disconnect</button>
+        <span class="pill" id="status-chat">disconnected</span>
+    </div>
+    <div class="row">
+        <input id="chat-input" placeholder="메시지를 입력하세요" size="50" />
+        <button id="btn-chat-send" disabled>Send</button>
+    </div>
+</div>
+
+<!-- 음성 -->
+<div class="section">
+    <h2>음성</h2>
+    <div class="row">
+        <label>Codec:</label>
+        <select id="codec">
+            <option value="auto" selected>Auto (webm/ogg opus)</option>
+            <option value="audio/webm;codecs=opus">audio/webm;codecs=opus</option>
+            <option value="audio/ogg;codecs=opus">audio/ogg;codecs=opus</option>
+        </select>
+        <label>WS Audio URL:</label>
+        <input id="ws-url-audio" size="40" />
+        <button id="btn-audio-start">🎙️ Start</button>
+        <button id="btn-audio-stop" disabled>⏹️ Stop</button>
+        <span class="pill" id="status-audio">idle</span>
+    </div>
+    <div>
+        <strong>Server audio (TTS):</strong>
+        <audio id="player" controls></audio>
+    </div>
+</div>
+
+<!-- 로그 -->
+<div class="section">
+    <h2>로그</h2>
+    <div class="log mono" id="log"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

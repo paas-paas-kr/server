@@ -5,7 +5,7 @@ metadata:
   name: gateway-service
 
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: gateway-app
   ports:

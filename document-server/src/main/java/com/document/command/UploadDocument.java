@@ -2,12 +2,15 @@ package com.document.command;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.common.enumtype.Language;
+
 public record UploadDocument(
+	Long userId,
 	MultipartFile file,
-	String language
+	Language language
 ) {
 
-	public static UploadDocument of(MultipartFile file, String language) {
-		return new UploadDocument(file, language);
+	public static UploadDocument of(Long userId, MultipartFile file, Language language) {
+		return new UploadDocument(userId, file, language);
 	}
 }

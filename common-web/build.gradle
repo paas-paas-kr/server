@@ -2,17 +2,14 @@ bootJar.enabled = false
 jar.enabled = true
 
 dependencies {
-
-
-
-    implementation project(':common-core')
+    // common-core를 api로 설정하여 transitive dependency 전파
+    api project(':common-core')
     api 'com.fasterxml.jackson.core:jackson-annotations'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-
-    // swagger
+    // MVC 서버에서 사용할 의존성들을 api로 전파
+    api 'org.springframework.boot:spring-boot-starter-security'
+    api 'org.springframework.boot:spring-boot-starter-web'
     api 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 
     // JWT

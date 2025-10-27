@@ -6,6 +6,7 @@ import com.common.security.GatewayUserDetails;
 import com.member.dto.LoginRequest;
 import com.member.dto.MemberResponse;
 import com.member.dto.SignupRequest;
+import com.member.dto.UpdateLanguageRequest;
 import com.member.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,6 +48,19 @@ public class AuthController {
             @AuthenticationPrincipal GatewayUserDetails userDetails
     ) {
         MemberResponse response = authService.getMemberInfo(userDetails.getUserId());
+        return ResponseEntity.ok(DataResponse.from(response));
+    }
+
+    @PatchMapping("/language")
+    @Operation(summary = "언어 설정 변경", description = "사용자의 선호 언어 설정을 변경하고 새로운 JWT 토큰을 발급합니다. (JWT 필요)")
+    public ResponseEntity<DataResponse<TokenResponse>> updateLanguage(
+            @AuthenticationPrincipal GatewayUserDetails userDetails,
+            @Valid @RequestBody UpdateLanguageRequest request
+    ) {
+        TokenResponse response = authService.updatePreferredLanguageAndReissueToken(
+                userDetails.getUserId(),
+                request.preferredLanguage()
+        );
         return ResponseEntity.ok(DataResponse.from(response));
     }
 }

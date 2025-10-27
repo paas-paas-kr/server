@@ -10,6 +10,7 @@ public record MemberResponse(
     String name,
     String role,
     String status,
+    String preferredLanguage,
     LocalDateTime createdAt
 
 ) {
@@ -21,6 +22,7 @@ public record MemberResponse(
                 member.getName(),
                 member.getRole().name(),
                 member.getStatus().name(),
+                member.getPreferredLanguage().name(), // Language enum -> String (KOREAN, ENGLISH, etc.)
                 member.getCreatedAt()
         );
     }

@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.common.enumtype.Language;
 import com.document.domain.enumtype.JobStatus;
 
 @Entity
@@ -32,6 +33,9 @@ public class SummaryJob {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(nullable = false)
+	private Long userId;
+
 	@OneToMany(mappedBy = "job", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Document> documents = new ArrayList<>();
 
@@ -39,8 +43,9 @@ public class SummaryJob {
 	@Column(nullable = false)
 	private JobStatus status;
 
+	@Enumerated(EnumType.STRING)
 	@Column
-	private String summaryLanguage; // 요약 언어
+	private Language summaryLanguage; // 요약 언어
 
 	@Column
 	private String statusMessage; // 현재 진행 상태 메시지
@@ -52,15 +57,17 @@ public class SummaryJob {
 	private LocalDateTime completedAt;
 
 	@Builder(access = AccessLevel.PRIVATE)
-	private SummaryJob(String summaryLanguage, JobStatus status) {
+	private SummaryJob(Long userId, Language summaryLanguage, JobStatus status) {
+		this.userId = userId;
 		this.summaryLanguage = summaryLanguage;
 		this.status = status;
 		this.statusMessage = status.getMessage();
 		this.startedAt = LocalDateTime.now();
 	}
 
-	public static SummaryJob of(String summaryLanguage) {
+	public static SummaryJob of(Long userId, Language summaryLanguage) {
 		return SummaryJob.builder()
+			.userId(userId)
 			.summaryLanguage(summaryLanguage)
 			.status(JobStatus.PENDING)
 			.build();

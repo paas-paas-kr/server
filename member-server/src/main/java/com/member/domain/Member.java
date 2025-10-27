@@ -1,5 +1,6 @@
 package com.member.domain;
 
+import com.common.enumtype.Language;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -37,6 +38,10 @@ public class Member {
     @Column(nullable = false, length = 20)
     private MemberStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Language preferredLanguage;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -54,23 +59,30 @@ public class Member {
     }
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Member(String email, String password, String name, MemberRole role, MemberStatus status
+    private Member(String email, String password, String name, MemberRole role, MemberStatus status,
+                   Language preferredLanguage
     ) {
         this.email = email;
         this.password = password;
         this.name = name;
         this.role = role;
         this.status = status;
+        this.preferredLanguage = preferredLanguage;
     }
 
     public static Member of(final String email, final String password, final String name, final MemberRole role,
-                            final MemberStatus status) {
+                            final MemberStatus status, final Language preferredLanguage) {
         return Member.builder()
                 .email(email)
                 .password(password)
                 .name(name)
                 .role(role)
                 .status(status)
+                .preferredLanguage(preferredLanguage)
                 .build();
+    }
+
+    public void updatePreferredLanguage(final Language preferredLanguage) {
+        this.preferredLanguage = preferredLanguage;
     }
 }

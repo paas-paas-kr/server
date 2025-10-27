@@ -1,9 +1,11 @@
 package com.document.controller;
 
+import com.common.enumtype.Language;
 import com.common.response.DataResponse;
 import com.common.security.GatewayUserDetails;
 import com.document.command.UploadDocument;
 import com.document.command.UploadImage;
+import com.document.dto.DocumentListResponse;
 import com.document.dto.JobStatusResponse;
 import com.document.dto.SummaryResponse;
 import com.document.dto.UploadResponse;
@@ -20,6 +22,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor
@@ -29,15 +33,24 @@ public class DocumentController {
 	private final DocumentCommandService uploadService;
 	private final DocumentQueryService documentQueryService;
 
+	@GetMapping
+	@Operation(summary = "문서 목록 조회", description = "사용자 ID 기반으로 문서 목록을 조회합니다. (JWT 필요)")
+	public ResponseEntity<DataResponse<List<DocumentListResponse>>> getDocumentList(
+			@AuthenticationPrincipal GatewayUserDetails userDetails
+	) {
+		List<DocumentListResponse> documents = documentQueryService.getAllDocuments(userDetails.getUserId());
+		return ResponseEntity.ok(DataResponse.from(documents));
+	}
+
 	@PostMapping(value = "/upload/files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@Operation(summary = "문서 업로드", description = "단일 문서를 업로드하고 요약 작업을 시작합니다. (JWT 필요)")
 	public ResponseEntity<DataResponse<UploadResponse>> uploadDocument(
 			@AuthenticationPrincipal GatewayUserDetails userDetails,
-			@Valid @RequestParam(value = "file", required = true) MultipartFile file,
-			@Valid @RequestParam(value = "language", required = false, defaultValue = "ko") String language
+			@Valid @RequestParam(value = "file", required = true) MultipartFile file
 	) {
-		// userDetails.getUserId()와 userDetails.getEmail()로 사용자 정보 접근 가능
-		UploadResponse uploadResponse = uploadService.uploadDocument(UploadDocument.of(file, language));
+		UploadResponse uploadResponse = uploadService.uploadDocument(
+			UploadDocument.of(userDetails.getUserId(), file, userDetails.getPreferredLanguage())
+		);
 		return ResponseEntity.ok(DataResponse.from(uploadResponse));
 	}
 
@@ -45,11 +58,11 @@ public class DocumentController {
 	@Operation(summary = "이미지 업로드", description = "여러 이미지를 업로드하고 하나의 요약 작업을 시작합니다. 모든 이미지의 텍스트를 추출하여 하나의 요약문을 생성합니다. (JWT 필요)")
 	public ResponseEntity<DataResponse<UploadResponse>> uploadImages(
 			@AuthenticationPrincipal GatewayUserDetails userDetails,
-			@Valid @RequestPart(value = "images", required = true) MultipartFile[] images,
-			@Valid @RequestParam(value = "language", required = false, defaultValue = "ko") String language
+			@Valid @RequestPart(value = "images", required = true) MultipartFile[] images
 	) {
-		// userDetails.getUserId()와 userDetails.getEmail()로 사용자 정보 접근 가능
-		UploadResponse uploadResponse = uploadService.uploadImages(UploadImage.of(images, language));
+		UploadResponse uploadResponse = uploadService.uploadImages(
+			UploadImage.of(userDetails.getUserId(), images, userDetails.getPreferredLanguage())
+		);
 		return ResponseEntity.ok(DataResponse.from(uploadResponse));
 	}
 

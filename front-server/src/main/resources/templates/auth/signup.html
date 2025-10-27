@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - 다문화 가정 상담 서비스</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <div class="auth-logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <line x1="20" y1="8" x2="20" y2="14"></line>
+                        <line x1="23" y1="11" x2="17" y2="11"></line>
+                    </svg>
+                </div>
+                <h1 class="auth-title">함께 시작해요!</h1>
+                <p class="auth-subtitle">다문화 가정을 위한 AI 상담 서비스</p>
+            </div>
+
+            <form class="auth-form" onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label class="form-label" for="name">이름 / Name</label>
+                    <input type="text" id="name" class="form-input" placeholder="홍길동 / Your name" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">이메일 / Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="your@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">비밀번호 / Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirmPassword">비밀번호 확인 / Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="form-input" placeholder="••••••••" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="preferredLanguage">선호 언어 / Preferred Language</label>
+                    <select id="preferredLanguage" class="form-input" required>
+                        <option value="KOREAN">한국어 (Korean)</option>
+                        <option value="ENGLISH">English</option>
+                        <option value="CHINESE">中文 (Chinese)</option>
+                        <option value="VIETNAMESE">Tiếng Việt (Vietnamese)</option>
+                        <option value="JAPANESE">日本語 (Japanese)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary">회원가입 / Sign up</button>
+            </form>
+
+            <div class="auth-link">
+                이미 계정이 있으신가요? / Already have an account? <br>
+                <a th:href="@{/auth/login}">로그인 / Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script>
+        // 페이지 로드 시 언어 적용 및 로그인 체크
+        document.addEventListener('DOMContentLoaded', function() {
+            // 언어 적용
+            if (window.i18n) {
+                window.i18n.updatePageLanguage();
+            }
+
+            // 이미 로그인되어 있으면 홈으로 이동
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+
+            if (isLoggedIn === 'true') {
+                window.location.href = '/home';
+            }
+        });
+
+        async function handleSignup(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const preferredLanguage = document.getElementById('preferredLanguage').value;
+
+            if (password !== confirmPassword) {
+                const errorMsg = getErrorMessage('signup.error.password_mismatch');
+                alert(errorMsg);
+                return;
+            }
+
+            if (password.length < 8) {
+                const errorMsg = getErrorMessage('signup.error.password_length');
+                alert(errorMsg);
+                return;
+            }
+
+            console.log('📝 회원가입 시작:', email);
+
+            try {
+                // 실제 API 호출
+                console.log('📤 API 호출:', `${window.API_BASE_URL}/api/auth/signup`);
+                const response = await fetch(`${window.API_BASE_URL}/api/auth/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        name: name,
+                        preferredLanguage: preferredLanguage
+                    }),
+                    credentials: 'include'
+                });
+
+                console.log('📥 회원가입 응답 상태:', response.status);
+                const result = await response.json();
+                console.log('📥 회원가입 응답 데이터:', result);
+
+                if (!response.ok) {
+                    console.error('❌ 회원가입 실패:', result.error);
+                    let errorMsg = result.error || 'signup.error.failed';
+
+                    // 에러 메시지가 한글이면 그대로 사용, 아니면 번역
+                    if (errorMsg.includes('이미 가입된')) {
+                        errorMsg = getErrorMessage('signup.error.duplicate');
+                    } else if (!errorMsg.includes('.')) {
+                        errorMsg = getErrorMessage(errorMsg);
+                    }
+
+                    alert(errorMsg);
+                    return;
+                }
+
+                console.log('✅ 회원가입 성공, 자동 로그인 중...');
+                // 회원가입 성공 후 자동 로그인
+                const loginResponse = await fetch(`${window.API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    }),
+                    credentials: 'include'
+                });
+
+                console.log('📥 로그인 응답 상태:', loginResponse.status);
+
+                if (loginResponse.ok) {
+                    const loginResult = await loginResponse.json();
+                    console.log('✅ 로그인 성공, 사용자 정보 조회 중...');
+
+                    // JWT 토큰 저장
+                    if (loginResult.data && loginResult.data.accessToken) {
+                        const token = loginResult.data.accessToken;
+                        localStorage.setItem('accessToken', token);
+                        console.log('✅ JWT 토큰 저장 완료');
+
+                        // 내 정보 조회
+                        const meResponse = await fetch(`${window.API_BASE_URL}/api/auth/me`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            },
+                            credentials: 'include'
+                        });
+
+                    console.log('📥 /me 응답 상태:', meResponse.status);
+
+                    if (meResponse.ok) {
+                        const meResult = await meResponse.json();
+                        const userInfo = meResult.data;
+                        console.log('✅ 사용자 정보:', userInfo);
+
+                        localStorage.setItem('userInfo', JSON.stringify({
+                            name: userInfo.name,
+                            email: userInfo.email,
+                            preferredLanguage: userInfo.preferredLanguage
+                        }));
+                        localStorage.setItem('isLoggedIn', 'true');
+
+                        // 사용자의 선호 언어 설정
+                        if (userInfo.preferredLanguage) {
+                            const langMap = {
+                                'KOREAN': '한국어',
+                                'ENGLISH': 'English',
+                                'CHINESE': '中文',
+                                'VIETNAMESE': 'Tiếng Việt',
+                                'JAPANESE': '日本語'
+                            };
+                            const langName = langMap[userInfo.preferredLanguage] || '한국어';
+                            localStorage.setItem('language', langName);
+                        }
+
+                        // 홈 화면으로 이동
+                        console.log('🏠 홈 화면으로 이동:', '/home');
+                        window.location.href = '/home';
+                    } else {
+                        console.error('❌ /me 호출 실패:', meResponse.status);
+                        const meError = await meResponse.text();
+                        console.error('에러 내용:', meError);
+                        alert('사용자 정보를 가져오는데 실패했습니다.');
+                    }
+                    } else {
+                        console.error('❌ JWT 토큰이 응답에 없음:', loginResult);
+                        alert('로그인 응답에 토큰이 없습니다.');
+                    }
+                } else {
+                    console.error('❌ 자동 로그인 실패:', loginResponse.status);
+                    // 회원가입은 성공했지만 로그인 실패
+                    alert(getErrorMessage('signup.success.login_required'));
+                    window.location.href = '/auth/login';
+                }
+            } catch (error) {
+                console.error('❌ Signup error:', error);
+                const errorMsg = getErrorMessage('signup.error.network');
+                alert(errorMsg);
+            }
+        }
+
+        // 에러 메시지 다국어 처리
+        function getErrorMessage(key) {
+            const messages = {
+                'signup.error.password_mismatch': {
+                    'ko': '비밀번호가 일치하지 않습니다.',
+                    'en': 'Passwords do not match.',
+                    'vi': 'Mật khẩu không khớp.',
+                    'zh': '密码不匹配。',
+                    'ja': 'パスワードが一致しません。'
+                },
+                'signup.error.password_length': {
+                    'ko': '비밀번호는 8자 이상이어야 합니다.',
+                    'en': 'Password must be at least 8 characters.',
+                    'vi': 'Mật khẩu phải có ít nhất 8 ký tự.',
+                    'zh': '密码必须至少8个字符。',
+                    'ja': 'パスワードは8文字以上である必要があります。'
+                },
+                'signup.error.duplicate': {
+                    'ko': '이미 가입된 이메일입니다.',
+                    'en': 'Email already registered.',
+                    'vi': 'Email đã được đăng ký.',
+                    'zh': '电子邮件已注册。',
+                    'ja': 'メールアドレスは既に登録されています。'
+                },
+                'signup.error.failed': {
+                    'ko': '회원가입에 실패했습니다.',
+                    'en': 'Signup failed.',
+                    'vi': 'Đăng ký thất bại.',
+                    'zh': '注册失败。',
+                    'ja': '登録に失敗しました。'
+                },
+                'signup.error.network': {
+                    'ko': '회원가입에 실패했습니다. 다시 시도해주세요.',
+                    'en': 'Signup failed. Please try again.',
+                    'vi': 'Đăng ký thất bại. Vui lòng thử lại.',
+                    'zh': '注册失败。请重试。',
+                    'ja': '登録に失敗しました。もう一度お試しください。'
+                },
+                'signup.success.login_required': {
+                    'ko': '회원가입이 완료되었습니다. 로그인해주세요.',
+                    'en': 'Signup completed. Please login.',
+                    'vi': 'Đăng ký hoàn tất. Vui lòng đăng nhập.',
+                    'zh': '注册完成。请登录。',
+                    'ja': '登録が完了しました。ログインしてください。'
+                }
+            };
+
+            const lang = window.i18n ? window.i18n.getLanguageCode(window.i18n.getCurrentLanguage()) : 'ko';
+            return messages[key]?.[lang] || messages[key]?.['ko'] || key;
+        }
+    </script>
+</body>
+</html>

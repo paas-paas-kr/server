@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: front-deployment
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: front-app
+
+  template:
+    metadata:
+      labels:
+        app: front-app
+    spec:
+      containers:
+        - name: front-container
+          image: paaspaas.kr.ncr.ntruss.com/front-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          env:
+            # ConfigMap에서 가져오는 환경 변수
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: front-config
+                  key: spring-profiles-active
+      imagePullSecrets:
+        - name: front-server-image-secret

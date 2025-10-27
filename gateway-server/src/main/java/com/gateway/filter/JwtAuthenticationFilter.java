@@ -57,12 +57,14 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
                 Long userId = jwtTokenValidator.getUserIdFromToken(token);
                 String email = jwtTokenValidator.getEmailFromToken(token);
                 String role = jwtTokenValidator.getRoleFromToken(token);
+                String language = jwtTokenValidator.getLanguageFromToken(token);
 
                 // 요청 헤더에 사용자 정보 추가 (다운스트림 서비스에서 사용)
                 ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
                         .header("X-User-Id", String.valueOf(userId))
                         .header("X-User-Email", email)
                         .header("X-User-Role", role)
+                        .header("X-User-Language", language)
                         .build();
 
                 return chain.filter(exchange.mutate().request(modifiedRequest).build());

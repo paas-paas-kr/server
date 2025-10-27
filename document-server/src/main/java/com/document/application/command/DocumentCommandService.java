@@ -42,7 +42,7 @@ public class DocumentCommandService {
 	public UploadResponse uploadDocument(final UploadDocument uploadDocument) {
 		try {
 			// SummaryJob 생성
-			SummaryJob job = SummaryJob.of(uploadDocument.language());
+			SummaryJob job = SummaryJob.of(uploadDocument.userId(), uploadDocument.language());
 			job = summaryJobRepository.save(job);
 
 			// 파일 저장
@@ -77,7 +77,7 @@ public class DocumentCommandService {
 	public UploadResponse uploadImages(final UploadImage uploadImage) {
 		try {
 			// SummaryJob 먼저 생성
-			SummaryJob job = SummaryJob.of(uploadImage.language());
+			SummaryJob job = SummaryJob.of(uploadImage.userId(), uploadImage.language());
 			job = summaryJobRepository.save(job);
 
 			//  모든 이미지를 저장하고 Document 생성

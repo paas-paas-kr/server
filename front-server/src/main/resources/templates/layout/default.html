@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">다문화 가정 상담 서비스</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <!-- 메인 컨텐츠 영역 -->
+    <div class="main-container">
+        <div layout:fragment="content"></div>
+    </div>
+
+    <!-- 하단 네비게이션 바 -->
+    <nav class="bottom-nav">
+        <a th:href="@{/home}" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/home')} ? 'active' : ''">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span class="nav-label" data-i18n="nav.home">홈</span>
+        </a>
+        <a th:href="@{/chat}" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/chat')} ? 'active' : ''">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span class="nav-label" data-i18n="nav.chat">채팅</span>
+        </a>
+        <a th:href="@{/document}" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/document')} ? 'active' : ''">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            <span class="nav-label" data-i18n="nav.document">문서</span>
+        </a>
+        <a th:href="@{/mypage}" class="nav-item" th:classappend="${#httpServletRequest.requestURI.startsWith('/mypage')} ? 'active' : ''">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span class="nav-label" data-i18n="nav.mypage">마이페이지</span>
+        </a>
+    </nav>
+
+    <script th:src="@{/js/i18n.js}"></script>
+    <script>
+        // 페이지 로드 시 언어 적용
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.i18n) {
+                window.i18n.updatePageLanguage();
+            }
+        });
+    </script>
+    <script layout:fragment="scripts"></script>
+</body>
+</html>

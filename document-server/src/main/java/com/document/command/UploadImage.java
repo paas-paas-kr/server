@@ -2,11 +2,14 @@ package com.document.command;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.common.enumtype.Language;
+
 public record UploadImage(
+	Long userId,
 	MultipartFile[] images,
-	String language
+	Language language
 ) {
-	public static UploadImage of(MultipartFile[] images, String language) {
-		return new UploadImage(images, language);
+	public static UploadImage of(Long userId, MultipartFile[] images, Language language) {
+		return new UploadImage(userId, images, language);
 	}
 }

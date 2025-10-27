@@ -1,6 +1,7 @@
 package com.member.service;
 
 import com.common.dto.TokenResponse;
+import com.common.enumtype.Language;
 
 import com.member.domain.Member;
 import com.member.dto.LoginRequest;
@@ -38,7 +39,14 @@ public class AuthService {
         String encodedPassword = passwordEncoder.encode(request.password());
 
         // 회원 생성
-        Member member = Member.of(request.email(),encodedPassword, request.name(), Member.MemberRole.USER, Member.MemberStatus.ACTIVE);
+        Member member = Member.of(
+            request.email(),
+            encodedPassword,
+            request.name(),
+            Member.MemberRole.USER,
+            Member.MemberStatus.ACTIVE,
+            request.preferredLanguage()
+        );
         Member savedMember = memberRepository.save(member);
 
         return MemberResponse.from(savedMember);
@@ -64,7 +72,12 @@ public class AuthService {
         }
 
         // JWT 토큰 생성
-        String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getEmail(), member.getRole().name());
+        String accessToken = jwtTokenProvider.generateAccessToken(
+            member.getId(),
+            member.getEmail(),
+            member.getRole().name(),
+            member.getPreferredLanguage().name()
+        );
         String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
 
         return TokenResponse.of(accessToken, refreshToken, jwtTokenProvider.getExpirationTime() / 1000);
@@ -79,5 +92,40 @@ public class AuthService {
                 .orElseThrow(() -> UserException.from(UserErrorCode.USER_NOT_FOUND));
 
         return MemberResponse.from(member);
+    }
+
+    /**
+     * 언어 설정 변경
+     */
+    @Transactional
+    public MemberResponse updatePreferredLanguage(Long memberId, Language preferredLanguage) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> UserException.from(UserErrorCode.USER_NOT_FOUND));
+
+        member.updatePreferredLanguage(preferredLanguage);
+
+        return MemberResponse.from(member);
+    }
+
+    /**
+     * 언어 설정 변경 및 새로운 JWT 토큰 발급
+     */
+    @Transactional
+    public TokenResponse updatePreferredLanguageAndReissueToken(Long memberId, Language preferredLanguage) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> UserException.from(UserErrorCode.USER_NOT_FOUND));
+
+        member.updatePreferredLanguage(preferredLanguage);
+
+        // 새로운 JWT 토큰 생성 (변경된 언어 정보 포함)
+        String accessToken = jwtTokenProvider.generateAccessToken(
+            member.getId(),
+            member.getEmail(),
+            member.getRole().name(),
+            member.getPreferredLanguage().name()
+        );
+        String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
+
+        return TokenResponse.of(accessToken, refreshToken, jwtTokenProvider.getExpirationTime() / 1000);
     }
 }

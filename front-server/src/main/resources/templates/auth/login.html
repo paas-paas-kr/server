@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - 다문화 가정 상담 서비스</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <div class="auth-logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+                <h1 class="auth-title">다시 만나서 반가워요!</h1>
+                <p class="auth-subtitle">다문화 가정을 위한 AI 상담 서비스</p>
+            </div>
+
+            <form class="auth-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label" for="email">이메일 / Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="your@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">비밀번호 / Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">로그인 / Login</button>
+            </form>
+
+            <div class="auth-link">
+                계정이 없으신가요? / Don't have an account? <br>
+                <a th:href="@{/auth/signup}">회원가입 / Sign up</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script>
+        // 페이지 로드 시 언어 적용 및 로그인 체크
+        document.addEventListener('DOMContentLoaded', function() {
+            // 언어 적용
+            if (window.i18n) {
+                window.i18n.updatePageLanguage();
+            }
+
+            // 이미 로그인되어 있으면 홈으로 이동
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+
+            if (isLoggedIn === 'true') {
+                window.location.href = '/home';
+            }
+        });
+
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            console.log('🔐 로그인 시작:', email);
+
+            try {
+                // 실제 API 호출
+                console.log('📤 API 호출:', `${window.API_BASE_URL}/api/auth/login`);
+                const response = await fetch(`${window.API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    }),
+                    credentials: 'include'
+                });
+
+                console.log('📥 로그인 응답 상태:', response.status);
+                const result = await response.json();
+                console.log('📥 로그인 응답 데이터:', result);
+
+                if (!response.ok) {
+                    console.error('❌ 로그인 실패:', result.error);
+                    const errorMsg = getErrorMessage(result.error || 'login.error.failed');
+                    alert(errorMsg);
+                    return;
+                }
+
+                // JWT 토큰 저장
+                if (result.data && result.data.accessToken) {
+                    const token = result.data.accessToken;
+                    localStorage.setItem('accessToken', token);
+                    console.log('✅ JWT 토큰 저장 완료');
+
+                    console.log('✅ 로그인 성공, 사용자 정보 조회 중...');
+                    // 내 정보 조회
+                    const meResponse = await fetch(`${window.API_BASE_URL}/api/auth/me`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        credentials: 'include'
+                    });
+
+                    console.log('📥 /me 응답 상태:', meResponse.status);
+
+                    if (meResponse.ok) {
+                        const meResult = await meResponse.json();
+                        const userInfo = meResult.data;
+                        console.log('✅ 사용자 정보:', userInfo);
+
+                        localStorage.setItem('userInfo', JSON.stringify({
+                            name: userInfo.name,
+                            email: userInfo.email,
+                            preferredLanguage: userInfo.preferredLanguage
+                        }));
+                        localStorage.setItem('isLoggedIn', 'true');
+
+                        // 사용자의 선호 언어 설정
+                        if (userInfo.preferredLanguage) {
+                            const langMap = {
+                                'KOREAN': '한국어',
+                                'ENGLISH': 'English',
+                                'CHINESE': '中文',
+                                'VIETNAMESE': 'Tiếng Việt',
+                                'JAPANESE': '日本語'
+                            };
+                            const langName = langMap[userInfo.preferredLanguage] || '한국어';
+                            localStorage.setItem('language', langName);
+                        }
+
+                        // 홈 화면으로 이동
+                        console.log('🏠 홈 화면으로 이동:', '/home');
+                        window.location.href = '/home';
+                    } else {
+                        console.error('❌ /me 호출 실패:', meResponse.status);
+                        const meError = await meResponse.text();
+                        console.error('에러 내용:', meError);
+                        alert('사용자 정보를 가져오는데 실패했습니다.');
+                    }
+                } else {
+                    console.error('❌ result.data가 없음:', result);
+                    alert('로그인 응답에 데이터가 없습니다.');
+                }
+            } catch (error) {
+                console.error('❌ Login error:', error);
+                const errorMsg = getErrorMessage('login.error.network');
+                alert(errorMsg);
+            }
+        }
+
+        // 에러 메시지 다국어 처리
+        function getErrorMessage(key) {
+            const messages = {
+                'login.error.failed': {
+                    'KOREAN': '이메일 또는 비밀번호가 올바르지 않습니다.',
+                    'ENGLISH': 'Email or password is incorrect.',
+                    'VIETNAMESE': 'Email hoặc mật khẩu không đúng.',
+                    'CHINESE': '电子邮件或密码不正确。',
+                    'JAPANESE': 'メールアドレスまたはパスワードが正しくありません。'
+                },
+                'login.error.network': {
+                    'KOREAN': '로그인에 실패했습니다. 다시 시도해주세요.',
+                    'ENGLISH': 'Login failed. Please try again.',
+                    'VIETNAMESE': 'Đăng nhập thất bại. Vui lòng thử lại.',
+                    'CHINESE': '登录失败。请重试。',
+                    'JAPANESE': 'ログインに失敗しました。もう一度お試しください。'
+                }
+            };
+
+            const lang = window.i18n ? window.i18n.getLanguageCode(window.i18n.getCurrentLanguage()) : 'KOREAN';
+            return messages[key]?.[lang] || messages[key]?.['KOREAN'] || key;
+        }
+    </script>
+</body>
+</html>

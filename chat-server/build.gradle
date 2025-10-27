@@ -1,10 +1,22 @@
 dependencies {
-	// 필요한 의존성 추가
-    // implementation project(':common')
+    // WebFlux 서버이므로 common-core만 사용
+    implementation project(':common-core')
 
-    // Spring Data JPA
-    // implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // WebFlux (for WebSocket and Reactive)
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
-    // mysql connector
-    // runtimeOnly 'com.mysql:mysql-connector-j'
+    // Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // WebSocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // Swagger (WebFlux용)
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.7.0'
+
+    // Google Cloud Firestore
+    implementation 'com.google.cloud:google-cloud-firestore:3.7.0'
+
+    // Validation
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 }

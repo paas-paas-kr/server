@@ -2,9 +2,11 @@ package com.document.application.query;
 
 import com.common.exception.document.DocumentErrorCode;
 import com.common.exception.document.DocumentException;
+import com.document.domain.Document;
 import com.document.domain.enumtype.JobStatus;
 import com.document.domain.SummaryJob;
 import com.document.domain.SummaryResult;
+import com.document.dto.DocumentListResponse;
 import com.document.dto.JobStatusResponse;
 import com.document.dto.SummaryResponse;
 import com.document.repository.SummaryJobRepository;
@@ -16,7 +18,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -57,5 +61,32 @@ public class DocumentQueryService {
         String summary = result != null ? result.getSummary() : "문서 분석 결과 정보가 존재하지 않습니다.";
 
         return SummaryResponse.of(job.getId(), job.getStatus().getMessage(), summary);
+    }
+
+    /**
+     * 사용자 ID를 기반으로 문서 목록을 조회합니다.
+     * 최신 업로드 순으로 정렬됩니다.
+     */
+    @Transactional(readOnly = true)
+    public List<DocumentListResponse> getAllDocuments(Long userId) {
+        List<SummaryJob> jobs = summaryJobRepository.findByUserId(userId);
+
+        return jobs.stream()
+            .sorted((a, b) -> b.getStartedAt().compareTo(a.getStartedAt()))
+            .map(job -> {
+                List<String> fileNames = job.getDocuments().stream()
+                    .map(Document::getFileName)
+                    .collect(Collectors.toList());
+
+                return DocumentListResponse.of(
+                    job.getId(),
+                    fileNames,
+                    job.getStatus(),
+                    job.getStatusMessage(),
+                    job.getStartedAt(),
+                    job.getCompletedAt()
+                );
+            })
+            .collect(Collectors.toList());
     }
 }

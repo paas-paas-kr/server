@@ -1,4 +1,6 @@
 dependencies {
+    // WebFlux 서버이므로 common-core만 사용
+    implementation project(':common-core')
 
     // Spring Cloud Gateway
     implementation "org.springframework.cloud:spring-cloud-starter-gateway-server-webflux"

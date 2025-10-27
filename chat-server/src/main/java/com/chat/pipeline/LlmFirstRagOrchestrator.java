@@ -91,9 +91,9 @@ public class LlmFirstRagOrchestrator {
             String systemPrompt = PromptBuilder.getSystemInstruction();
             String userPrompt = PromptBuilder.getUserContextPrompt(userTextKo, cites);
 
-            // (부수 효과) 클라이언트에게 "이제 LLM 답변 생성 시작"이라고 알림
-            emitter.emitText(JsonUtils.toJson(Map.of(
-                    "type","nlp-stream","event","progress","data", Map.of("stage","gen","detail","stream"),"traceId",traceId)));
+//            // (부수 효과) 클라이언트에게 "이제 LLM 답변 생성 시작"이라고 알림
+//            emitter.emitText(JsonUtils.toJson(Map.of(
+//                    "type","nlp-stream","event","progress","data", Map.of("stage","gen","detail","stream"),"traceId",traceId)));
 
             // 2. LLM에게 최종 답변(비스트리밍)을 요청
             return llm.getCompleteAnswer(systemPrompt, userPrompt, traceId);
@@ -105,9 +105,8 @@ public class LlmFirstRagOrchestrator {
         // 최종 LLM 답변(String)을 반환함.
         return answerMono
                 // (부수 효과) 이 파이프라인 *전체*가 구독(시작)될 때 "rewrite 시작" 알림
-                .doOnSubscribe(s -> emitter.emitText(JsonUtils.toJson(Map.of(
-                        "type","nlp-stream","event","progress","data", Map.of("stage","rewrite","detail","begin"),"traceId",traceId))))
-
+//                .doOnSubscribe(s -> emitter.emitText(JsonUtils.toJson(Map.of(
+//                        "type","nlp-stream","event","progress","data", Map.of("stage","rewrite","detail","begin"),"traceId",traceId))))
                 // (부수 효과) LLM의 최종 답변(CompleteAnswer 객체) 로깅
                 .doOnNext(ca -> System.out.println("CompleteAnswer.text ="+ ca.text()))
                 // [map 동기] Mono<CompleteAnswer> -> Mono<String> (알맹이 변환)
@@ -129,17 +128,20 @@ public class LlmFirstRagOrchestrator {
                 .doFinally(sig -> {
                     // "성공적으로 완료(ON_COMPLETE)"되었을 때만
                     if (sig == SignalType.ON_COMPLETE) {
-                        // 1. 토큰 사용량(Usage) 조회 및 전송
+                        // 1. 토큰 사용량(Usage) 로그
                         var u = llm.lastUsage(traceId);
                         if (u != null) {
-                            emitter.emitText(JsonUtils.toJson(Map.of(
-                                    "type","nlp-stream","event","usage","data",
-                                    Map.of("promptTokens",u.promptTokens(),"completionTokens",u.completionTokens(),"totalTokens",u.totalTokens()),
-                                    "traceId",traceId)));
+                            log.info("usage promptTokens={} completionTokens={} totalTokens={}",
+                                    u.promptTokens(), u.completionTokens(), u.totalTokens());
+//                            emitter.emitText(JsonUtils.toJson(Map.of(
+//                                    "type","nlp-stream","event","usage","data",
+//                                    Map.of("promptTokens",u.promptTokens(),"completionTokens",u.completionTokens(),"totalTokens",u.totalTokens()),
+//                                    "traceId",traceId)));
                         }
-                        // 2. 최종 "done" 이벤트 전송
-                        emitter.emitText(JsonUtils.toJson(Map.of(
-                                "type","nlp-stream","event","done","data", Map.of("finish", true),"traceId",traceId)));
+                        // 2. 최종 "done" 이벤트 로그
+                        log.info("done finish=true");
+//                        emitter.emitText(JsonUtils.toJson(Map.of(
+//                                "type","nlp-stream","event","done","data", Map.of("finish", true),"traceId",traceId)));
                     }
                     // (참고: 에러(ON_ERROR)시에는 doOnError가 이미 처리했으므로 여기선 'done' 안 보냄)
                 });

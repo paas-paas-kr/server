@@ -14,5 +14,5 @@ public class ChatInbound {
     private String text;      //
     private String userId;
     private String lang;
-
+    private String roomId;
 }

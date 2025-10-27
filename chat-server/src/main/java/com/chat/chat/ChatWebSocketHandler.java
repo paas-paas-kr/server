@@ -6,6 +6,7 @@ import com.chat.common.ws.SessionRegistry;
 import com.chat.chat.model.ChatInbound;
 import com.chat.common.json.JsonUtils;
 import com.chat.common.ws.WsEmitter;
+import com.chat.conversation.service.ConversationService;
 import com.chat.pipeline.LlmFirstRagOrchestrator;
 import com.chat.rag.model.Citation;
 import com.chat.rag.model.SearchPlan;
@@ -13,6 +14,7 @@ import com.chat.trans.NaverPapagoTransClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.socket.CloseStatus;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Mono;
@@ -21,10 +23,7 @@ import reactor.core.publisher.SignalType;
 import java.util.List;
 import java.util.Map;
 
-/**
- * SessionRegistry: 현재 연결된 모든 WebSocket 세션 정보를 관리하는 저장소
- *
- */
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -34,7 +33,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     private final ChatMessageRouter router;  // 수신된 메시지를 적절한 비즈니스 로직으로 라우팅
     private final NaverPapagoTransClient transClient; //Papago API 번역 클라이언트 (비동기 Mono 반환)
     private final LlmFirstRagOrchestrator rag; //Rag 및 LLM 오케스트레이터 (비동기 Mono 반환)
-
+    private final ConversationService conversationService; //DB 저장을 위한 서비스 주입
     /**
      * WebSocket 연결이 수립될 때 호출되는 메인 메서드
      * @param session 현재 연결된 WebSocket 세션
@@ -44,7 +43,6 @@ public class ChatWebSocketHandler implements WebSocketHandler {
     public Mono<Void> handle(WebSocketSession session) {
         // 1. Emitter 생성: 클라이언트에게 메시지를 보내는 통로(Flux)를 생성하고 레지스트리에 등록
         WsEmitter emitter = registry.createEmitter(session.getId(), session);
-
         // 2. Inbound(수신) 파이프라인 정의 : 클라이언트로부터 메시지를 받았을 때의 처리 흐름
         //map: 동기 변환 / flatMap: 비동기&순서 무관 / concatMap: 비동기 & 순서 보장
         // concatMap은 내부는 비동기적으로 처리되지만, 입력 순서대로 결과 순서도 보장한다
@@ -82,7 +80,9 @@ public class ChatWebSocketHandler implements WebSocketHandler {
                     String targetLang = "ko"; // RAG/LLM은 한국어로 처리
                     String text = in.getText(); // 사용자의 원본 텍스트
                     String traceId = session.getId(); // 트레이싱 ID로 세션 ID 사용
-
+                    in.setUserId(session.getId());
+                    String roomId = in.getRoomId();
+                    System.out.println(in);
                     // 번역 결과 캐시: Papago API 호출을 1번만 하기 위함
                     // 아래 translatedFlow와 ragAndTranslateFlow가 모두 '한국어 번역본'을 필요로 함.
                     // .cache()가 없으면 Papago API가 2번 호출됨.
@@ -120,12 +120,20 @@ public class ChatWebSocketHandler implements WebSocketHandler {
                                         "traceId", traceId
                                 )));
                             })
-                            .flatMap(translatedAnswer -> { // (비동기 flatMap)
-                                // 위 doOnNext에서 이미 데이터를 다 보냈음.
-                                // 이 파이프라인(Flow 3)을 성공적으로 "완료"시키기 위해 Mono<Void>를 반환.
-                                // .then()과 동일한 효과.
-                                return Mono.empty();
-                            });
+                            .doOnNext(translatedAnswer->{
+                                // --- [수정 3: Fire-and-Forget으로 '질문/답변' 동시 저장] ---
+                                // LLM 답변을 받은 이 시점에 '질문'과 '답변'을 모두 안다.
+                                // .subscribe()를 호출하여 DB 저장을 백그라운드로 보내고 기다리지 않는다.
+
+                                conversationService.createMessage(text, translatedAnswer,/*roomId*/"gimin_room")
+                                        .subscribe(
+                                                // 성공 시 로그 (저장된 메시지 ID 등)
+                                                savedMessage -> log.info("[WS:{}] 메시지 저장 성공: {}", session.getId(), savedMessage.getId()),
+                                                // 실패 시 에러 로그
+                                                err -> log.error("[WS:{}] '질문/답변' DB 저장 실패: {}", session.getId(), err.getMessage())
+                                        );
+                            })
+                            .then();
 
                     // ★ 3개의 비동기 Flow 순서 보장
                     // .then()은 데이터(onNext)는 무시하고, 앞선 Mono가 완료(onComplete) 신호를 보내야
@@ -164,7 +172,7 @@ public class ChatWebSocketHandler implements WebSocketHandler {
      */
     private ChatInbound copyAsTrans(ChatInbound in, String translated){
         // 원본의 userId와 lang을 유지하되, text와 type을 변경
-        return new ChatInbound(MessageType.TRANS, translated, in.getUserId(), in.getLang());
+        return new ChatInbound(MessageType.TRANS, translated, in.getUserId(), in.getLang(),in.getRoomId());
     }
 
 }

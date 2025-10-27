@@ -1,6 +1,5 @@
-package com.chat.llm;
+package com.chat.config;
 
-import com.chat.config.AppProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -10,6 +10,5 @@ public class AudioMeta {
     private String type;
     private String lang;
     private String mimeType;
-    private Integer sampleRate;
-    private Integer channels;
+    private String roomId;
 }

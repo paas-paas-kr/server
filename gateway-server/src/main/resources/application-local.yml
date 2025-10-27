@@ -52,7 +52,7 @@ spring:
               predicates:
                 - Path=/api/chat/**
               filters:
-                - name: JwtAuthenticationFilter
+              # - name: JwtAuthenticationFilter
 
             # Report Service 라우팅 (JWT 필요)
             - id: report-service

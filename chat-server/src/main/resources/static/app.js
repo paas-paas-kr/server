@@ -45,7 +45,7 @@ let recorder = null;     // MediaRecorder 인스턴스
 let lastObjectUrl = null;// 재생에 썼던 ObjectURL (누수 방지로 revoke할 때 사용)
 
 // 서버로 보내는 오디오 메타 정보
-const meta = { mimeType: '', sampleRate: 48000, channels: 1 };
+const meta = { mimeType: ''};
 
 // 오디오 청크 전송 시 순서 보장을 위한 시퀀스 번호(4바이트 헤더로 보냄)
 let seq = 1;
@@ -188,9 +188,9 @@ function playArrayBuffer(ab) {
         lastObjectUrl = URL.createObjectURL(blob); // 새 Object URL 생성
         player.src = lastObjectUrl; // player 소스로 설정
         player.play().catch(() => {}); // 재생 시도 (자동재생 실패 가능)
-        logRaw('🔊 [audio] play server audio:', mime, blob.size, 'bytes');
+      //  logRaw('🔊 [audio] play server audio:', mime, blob.size, 'bytes');
     } catch (e) {
-        logRaw('audio play err:', e);
+       // logRaw('audio play err:', e);
     }
 }
 
@@ -275,7 +275,7 @@ function connectChat() {
         btnChatConn.disabled = true; // 연결 버튼 비활성화
         btnChatDisc.disabled = false; // 해제 버튼 활성화
         btnChatSend.disabled = false; // 전송 버튼 활성화
-        logRaw('🔌 [chat] open:', url);
+    //    logRaw('🔌 [chat] open:', url);
     };
 
     // [핵심] 서버 메시지 수신
@@ -315,7 +315,7 @@ function connectChat() {
 
             // 9. 바이너리(ArrayBuffer) 수신 (TTS 오디오)
         } else if (ev.data instanceof ArrayBuffer) {
-            logRaw('⬅️ [chat/bin]', ev.data.byteLength, 'bytes');
+        //    logRaw('⬅️ [chat/bin]', ev.data.byteLength, 'bytes');
             playArrayBuffer(ev.data); // 오디오 재생
 
             // 10. Blob 수신 (호환성)
@@ -332,7 +332,7 @@ function connectChat() {
         btnChatConn.disabled = false; // 연결 버튼 활성화
         btnChatDisc.disabled = true; // 해제 버튼 비활성화
         btnChatSend.disabled = true; // 전송 버튼 비활성화
-        logRaw('🔌 [chat] close:', e.code, e.reason || '');
+    //    logRaw('🔌 [chat] close:', e.code, e.reason || '');
     };
 
     // WS 에러
@@ -381,7 +381,7 @@ async function startAudio() {
         // 1. 지원되는 코덱 선택
         const chosen = pickSupportedMime(codecSel.value);
         if (!chosen) {
-            logRaw('❌ [audio] 지원 가능한 녹음 코덱을 찾지 못했습니다.');
+          //  logRaw('❌ [audio] 지원 가능한 녹음 코덱을 찾지 못했습니다.');
             statusAudio.textContent = 'error';
             btnAudioStart.disabled = false;
             return;
@@ -395,8 +395,8 @@ async function startAudio() {
         // 3. 오디오 메타 정보 설정
         const track = stream.getAudioTracks()[0];
         const settings = track.getSettings ? track.getSettings() : {};
-        meta.sampleRate = settings.sampleRate || await getSampleRateViaAudioContext(); // 실제 샘플레이트
-        meta.channels   = settings.channelCount || 1;
+        //meta.sampleRate = settings.sampleRate || await getSampleRateViaAudioContext(); // 실제 샘플레이트
+       // meta.channels   = settings.channelCount || 1;
         meta.mimeType   = chosen;
 
         // 4. 오디오 WS 연결
@@ -407,15 +407,14 @@ async function startAudio() {
         // 오디오 WS 연결 성공
         wsAudio.onopen = () => {
             statusAudio.textContent = 'recording';
-            logRaw('🔌 [audio] open:', url);
+    //        logRaw('🔌 [audio] open:', url);
 
             // 5. 'START' 메시지 전송 (메타정보, 핸드셰이크)
             wsAudio.send(JSON.stringify({
                 type: 'START',
                 lang: currentLang(),
                 mimeType: meta.mimeType,
-                sampleRate: meta.sampleRate,
-                channels: meta.channels
+                roomId: 'gimin_room'
             }));
 
             // 6. MediaRecorder 설정
@@ -426,7 +425,7 @@ async function startAudio() {
             // 녹음 시작 시
             recorder.onstart = () => {
                 recordStartAt = performance.now(); // 시작 시간 기록
-                logRaw('⏺️ [audio] recording started:', meta.mimeType, meta.sampleRate + 'Hz');
+              //  logRaw('⏺️ [audio] recording started:', meta.mimeType, meta.sampleRate + 'Hz');
                 // 빠른 정지 버튼 클릭 방지
                 setTimeout(() => { btnAudioStop.disabled = false; }, 600);
             };
@@ -449,7 +448,7 @@ async function startAudio() {
                 wsAudio.send(out); // WS 전송
 
                 sentChunks++;
-                logRaw('➡️ [audio/chunk] seq=', seq, 'bytes=', body.byteLength, 'sentChunks=', sentChunks);
+            //    logRaw('➡️ [audio/chunk] seq=', seq, 'bytes=', body.byteLength, 'sentChunks=', sentChunks);
                 seq++; // 시퀀스 번호 증가
             };
 
@@ -470,7 +469,7 @@ async function startAudio() {
                     const v = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
                     const rseq = v.getUint32(0); // 응답 시퀀스
                     const payload = u8.slice(4).buffer; // 실제 오디오 데이터
-                    logRaw('⬅️ [audio/bin] seq=', rseq, 'bytes=', u8.length - 4);
+                    //logRaw('⬅️ [audio/bin] seq=', rseq, 'bytes=', u8.length - 4);
 
                     // 'FINISH' 응답 대기 중이었다면
                     if (awaitingFinal && finalResolve) {
@@ -503,7 +502,7 @@ async function startAudio() {
 
         // 오디오 WS 종료
         wsAudio.onclose = (e) => {
-            logRaw('🔌 [audio] close:', e.code, e.reason || '');
+           // logRaw('🔌 [audio] close:', e.code, e.reason || '');
             cleanupAudio(); // 리소스 정리
         };
         // 오디오 WS 에러
@@ -524,7 +523,7 @@ async function startAudio() {
  * @param {number} timeoutMs - 타임아웃 시간 (ms)
  * @returns {Promise<void>}
  */
-function requestFinalMerge(timeoutMs = 12000) {
+function requestFinalMerge(timeoutMs = 30000) {
     if (!wsAudio || wsAudio.readyState !== WebSocket.OPEN) {
         return Promise.reject(new Error('audio ws not open'));
     }
@@ -570,10 +569,10 @@ async function stopAudio() {
     if (wsAudio && wsAudio.readyState === WebSocket.OPEN) {
         try {
             statusAudio.textContent = 'finalizing…'; // 상태 업데이트
-            await requestFinalMerge(12000); // 최종 응답 기다리기
+            await requestFinalMerge(30000); // 최종 응답 기다리기
             mergeOk = true; // 성공
         } catch (e) {
-            logRaw('⚠️ [audio] final merge error:', e?.message || e);
+           // logRaw('⚠️ [audio] final merge error:', e?.message || e);
         }
     }
 

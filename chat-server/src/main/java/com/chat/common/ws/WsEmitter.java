@@ -2,6 +2,7 @@ package com.chat.common.ws;
 
 import com.chat.chat.model.ChatOutbound;
 import com.chat.common.json.JsonUtils;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Sinks;
  * 내부적으로 Project Reactor의 Sinks API를 사용하여 메시지를 반응형 스트림(Flux)으로 처리합니다.
  */
 @RequiredArgsConstructor
+@Getter
 public class WsEmitter {
 
     private final String sessionId;
@@ -31,18 +33,23 @@ public class WsEmitter {
         return new WsEmitter(sessionId, session, sink);
     }
 
-
     public Flux<WebSocketMessage> flux() {
         return sink.asFlux();
     }
 
     public void emitText(String json) {
         var msg = session.textMessage(json);
+        System.out.println("-----------------------------------------------");
+        System.out.println(json);
+        System.out.println("-----------------------------------------------");
         sink.tryEmitNext(msg);
     }
 
     public void emit(ChatOutbound outbound) {
         String json = JsonUtils.toJson(outbound);
+        System.out.println("-----------------------------------------------");
+        System.out.println(json);
+        System.out.println("-----------------------------------------------");
         sink.tryEmitNext(session.textMessage(json));
     }
 

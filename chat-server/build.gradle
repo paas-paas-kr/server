@@ -15,8 +15,15 @@ dependencies {
     }
 
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'com.google.auth:google-auth-library-oauth2-http:1.23.0'
-
+    // Google Cloud 라이브러리 버전을 한 번에 관리 (BOM)
+    implementation(platform("com.google.cloud:libraries-bom:26.68.0"))
+    // 버전은 BOM이 알아서 지정
+    implementation 'com.google.auth:google-auth-library-oauth2-http'
+    implementation("com.google.cloud:google-cloud-firestore")
+// build.gradle (Groovy)
     implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0'
 }
 
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['-parameters']
+}

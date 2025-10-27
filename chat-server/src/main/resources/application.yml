@@ -1,22 +1,4 @@
-server:
-  port: 8080
-logging:
-  level:
-    reactor.netty: DEBUG
-    org.springframework.web: DEBUG
-    org.springframework.web.reactive: DEBUG
-    org.springframework.web.reactive.client.ExchangeFunctions: TRACE
-    org.springframework.web.server: DEBUG
-    root: info
-    com.example.chat: debug
-
 app:
-  audio:
-    ffmpeg-path: "C:\\ffmpeg\\bin\\ffmpeg.exe"
-    mock:
-      enabled: false
-      on: META
-      sample: classpath:/mock/sample-tts.ogg
   stt:
     base-url: https://naveropenapi.apigw.ntruss.com
     path: /recog/v1/stt
@@ -42,9 +24,15 @@ app:
     http:
       connection-timeout-ms: 1500
       read-timeout-ms: 60000
+  gcp:
+    project-id: "paas-paas"
+    # sa.path: (삭제 -> local/prod 파일로 이동)
 
 spring:
   main:
     web-application-type: reactive
   config:
-    import: "optional:classpath:application-secret.yml"
+  profiles:
+    active: local
+
+

@@ -44,7 +44,7 @@ public class AudioWebSocketHandler implements WebSocketHandler {
                     if (msg.getType() == WebSocketMessage.Type.TEXT) {
                         // 수신
                         var text = msg.getPayloadAsText();
-
+                        System.out.println(text);
                         // FINISH: 짧은 디바운스 후 병합 → 처리 완료 시 소켓 종료
                         if (text.startsWith("{") && text.contains("\"type\":\"FINISH\"")) {
                             return Mono.defer(() -> {
@@ -95,9 +95,10 @@ public class AudioWebSocketHandler implements WebSocketHandler {
 
                         // START 메타
                         try {
-                            var meta = JsonUtils.fromJson(text, AudioMeta.class);
+                            AudioMeta meta = JsonUtils.fromJson(text, AudioMeta.class);
                             aggregator.setMeta(meta);
                             emitter.setAttribute("audioMeta", meta);
+                            emitter.setAttribute("roomId",meta.getRoomId());
                             processor.onMeta(sid, meta);
                             log.info("[AUDIO:{}] meta: {}", sid, meta);
                         } catch (Exception ignore) {
@@ -128,6 +129,7 @@ public class AudioWebSocketHandler implements WebSocketHandler {
                     if (msg.getType() == WebSocketMessage.Type.BINARY) {
                         return Mono.fromSupplier(() -> {
                                     var db = msg.getPayload();
+                                    System.out.println(db);
                                     byte[] bytes = new byte[db.readableByteCount()];
                                     db.read(bytes);
                                     return bytes;
@@ -162,6 +164,9 @@ public class AudioWebSocketHandler implements WebSocketHandler {
                                         if (merged != null && merged.length > 0) {
                                             String mime = (aggregator.meta != null ? aggregator.meta.getMimeType() : null);
                                             processor.processFinal(sid, merged, mime, emitter)
+                                                    .doOnSubscribe(s -> System.out.println("processFinal 구독"))
+                                                    .doOnSuccess(v -> System.out.println("processFinal 성공"))
+                                                    .then(Mono.defer(session::close))
                                                     .doFinally(s -> {
                                                         processor.complete(sid);
                                                         registry.cleanup(sid);
@@ -175,10 +180,10 @@ public class AudioWebSocketHandler implements WebSocketHandler {
                                         }
                                     }
                                 } else {
-                                    // 이미 FINISH 경로에서 정리됨
-                                    processor.complete(sid);
-                                    registry.cleanup(sid);
-                                    emitter.complete();
+//                                    // 이미 FINISH 경로에서 정리됨
+//                                    processor.complete(sid);
+//                                    registry.cleanup(sid);
+//                                    emitter.complete();
                                 }
                             } catch (Exception e) {
                                 log.error("[AUDIO:{}] process failed on finally", sid, e);

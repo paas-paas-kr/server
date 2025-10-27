@@ -1,17 +1,13 @@
 package com.chat.config;
 
 import io.netty.channel.ChannelOption;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -26,6 +22,7 @@ public class WebClientConfig {
 
     //application.yml의 값들을 AppProperties 클래스로 바인딩해서 넣음
     private final AppProperties props;
+    private final GoogleAccessTokenProvider tokenProvider;
 
     /**
      * HttpClient (Reactor Netty의 저수준 논블로킹 클라이언트)
@@ -57,29 +54,45 @@ public class WebClientConfig {
     public WebClient transWebClient(){
         return WebClient.builder()
                 .baseUrl(props.getTrans().getBaseUrl())
-                .clientConnector(connector(props.getStt().getConnectTimeoutMs(),props.getTrans().getConnectTimeoutMs()))
+                .clientConnector(connector(props.getTrans().getConnectTimeoutMs(),props.getTrans().getReadTimeoutMs()))
                 .build();
     }
 
-/*
+
+
     @Bean
     public WebClient llmWebClient() {
         return WebClient.builder()
-                .clientConnector(connector(props.getLlm().getTimeoutMs()))
                 .baseUrl(props.getLlm().getBaseUrl())
-                .defaultHeader("Authorization", "Bearer " + props.getLlm().getApiKey())
+                .clientConnector(connector(props.getLlm().getConnectionTimeoutMs(),props.getLlm().getReadTimeoutMs()))
                 .build();
     }
 
     @Bean
-    public WebClient ttsWebClient() {
+    public WebClient  vertexWebClient() {
         return WebClient.builder()
-                .clientConnector(connector(props.getTts().getTimeoutMs()))
-                .baseUrl(props.getTts().getBaseUrl())
-                .defaultHeader("Authorization", "Bearer " + props.getTts().getApiKey())
+                .baseUrl(props.getVertex().getSearchBaseUrl())
+                .clientConnector(connector(props.getVertex().getHttp().getConnectionTimeoutMs(), props.getVertex().getHttp().getReadTimeoutMs()))
+                /**
+                 * WebClient 인스턴스가 생성하는 모든 HTTP 요청(Request)을 실행하기 직전에 가로채서(intecept) 특정 로직을 수행하게 하는 기능
+                 * 앞으로 vertexWebClient 를 사용하는 모든 요청을 가로채서, 자동으로 토큰을 붙인 뒤, 원래 하려던 요청을 계속 진행시켜라라는 공통 규칙을 설정
+                 * req (ClientRequest): post(), get()등으로 만들어진 원본 요청 객체
+                 * -> 이 객체에는 URL, HTTP 메서드, 원본 헤더, 전송할 본문(body) 등의 정보가 들어있다.
+                 * next.exchange(...)를 호출해야만 요청이 다음 단계로 진행된다.
+                 *
+                 * ClientRequest.from(req) : ClientRequest 객체는 불변(immutable)이다. 즉, 생성한 req 객체를 직접 수정할 수 없다.
+                 * -> 따라서 ClientRequest.from(req)를 사용해, 원본 req 의 모든 속성(URL, 메서드 , 본문 등)을 그대로 복사한 새로운 ClientRequest.Builder를 생성한다.
+                 * tokenProvider.getBearerToken()를 호출하여 GoogleAccessTokenProvider로부터 현재 유효한 액세스 토큰 문자열을 가져온다.
+                 * h.setBearerAuth(...)는 HTTP 헤더에 Authorization: Bearer <가져온_토큰값> 항목을 추가하거나 덮어쓴다.
+                 */
+                .filter((req, next) ->
+                        next.exchange(
+                                ClientRequest.from(req)
+                                        .headers(h -> h.setBearerAuth(tokenProvider.getBearerToken()))
+                                        .build()))
                 .build();
     }
-    */
+
 
 
 }

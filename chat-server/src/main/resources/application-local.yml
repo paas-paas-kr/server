@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8083
 logging:
   level:
     reactor.netty: DEBUG
@@ -12,39 +12,13 @@ logging:
 
 app:
   audio:
+    # 내 PC의 로컬 경로
     ffmpeg-path: "C:\\ffmpeg\\bin\\ffmpeg.exe"
-    mock:
-      enabled: false
-      on: META
-      sample: classpath:/mock/sample-tts.ogg
-  stt:
-    base-url: https://naveropenapi.apigw.ntruss.com
-    path: /recog/v1/stt
-    language: Kor
-    connect-timeout-ms: 3000
-    read-timeout-ms: 60000
-  trans:
-    baseurl: https://papago.apigw.ntruss.com
-    path: /nmt/v1/translation
-    source: auto
-    target: ko
-    connect-timeout-ms: 3000
-    read-timeout-ms: 60000
-  llm:
-    base-url: "https://generativelanguage.googleapis.com"
-    connection-timeout-ms: 1000
-    read-timeout-ms: 60000
-  vertex:
-    search-base-url: "https://discoveryengine.googleapis.com"
-    project-id: "paas-paas"
-    location: "global"
-    scope: "https://www.googleapis.com/auth/cloud-platform"
-    http:
-      connection-timeout-ms: 1500
-      read-timeout-ms: 60000
+  gcp:
+    # 내 PC의 서비스 계정 키 경로
+    sa.path: C:/keys/paas-paas-1218c3347d8e.json
 
 spring:
-  main:
-    web-application-type: reactive
   config:
+    # 로컬에서만 비밀 설정 파일을 읽어옴
     import: "optional:classpath:application-secret.yml"

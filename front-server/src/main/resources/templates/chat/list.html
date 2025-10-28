@@ -127,6 +127,14 @@
             <div class="chat-input-container">
                 <div class="chat-input-wrapper">
                     <form class="chat-input-form" onsubmit="sendMessage(event)">
+                        <button type="button" class="voice-btn" id="voiceBtn" onclick="toggleVoiceRecording()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
+                            </svg>
+                        </button>
                         <textarea
                             class="chat-input"
                             id="messageInput"
@@ -708,6 +716,55 @@
                 if (welcomeBox) welcomeBox.style.display = 'block';
             }
         });
+
+        // 음성 녹음 관련 변수
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+
+        // 음성 녹음 토글
+        async function toggleVoiceRecording() {
+            const voiceBtn = document.getElementById('voiceBtn');
+
+            if (!isRecording) {
+                // 녹음 시작
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        // TODO: WebSocket으로 음성 데이터 전송
+                        console.log('Audio recorded:', audioBlob);
+                        alert('음성 녹음 완료! (WebSocket 음성 전송 기능 구현 필요)');
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    voiceBtn.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                    console.log('Recording started');
+                } catch (error) {
+                    console.error('Error accessing microphone:', error);
+                    alert('마이크 접근 권한이 필요합니다.');
+                }
+            } else {
+                // 녹음 중지
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                    isRecording = false;
+                    voiceBtn.style.background = 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)';
+                    console.log('Recording stopped');
+                }
+            }
+        }
 
         // 페이지 종료 시 WebSocket 연결 해제
         window.addEventListener('beforeunload', function() {

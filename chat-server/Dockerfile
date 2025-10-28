@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jdk
+FROM eclipse-temurin:17-jdk-jammy
 
 # FFmpeg 설치 (음성 처리용)
 RUN apt-get update && \

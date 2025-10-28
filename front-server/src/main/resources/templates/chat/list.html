@@ -721,44 +721,156 @@
         let mediaRecorder = null;
         let audioChunks = [];
         let isRecording = false;
+        let audioWs = null;
+        let audioSeq = 0;
+
+        // 음성 WebSocket 연결
+        function connectAudioWebSocket() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                console.error('No access token for audio');
+                return null;
+            }
+
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            let wsHost;
+            if (window.API_BASE_URL && window.API_BASE_URL !== '') {
+                wsHost = new URL(window.API_BASE_URL).host;
+            } else {
+                wsHost = window.location.host;
+            }
+            const wsUrl = `${wsProtocol}//${wsHost}/ws/audio?token=${token}`;
+
+            console.log('Connecting to Audio WebSocket:', wsUrl);
+
+            try {
+                const audioWs = new WebSocket(wsUrl);
+
+                audioWs.onopen = function() {
+                    console.log('Audio WebSocket connected');
+                };
+
+                audioWs.onmessage = function(event) {
+                    console.log('Audio WebSocket message:', event.data);
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.type === 'system' || data.text) {
+                            addMessage('ai', data.text || data.data?.text || 'Audio processed');
+                        }
+                    } catch (e) {
+                        console.log('Audio response:', event.data);
+                    }
+                };
+
+                audioWs.onerror = function(error) {
+                    console.error('Audio WebSocket error:', error);
+                };
+
+                audioWs.onclose = function() {
+                    console.log('Audio WebSocket closed');
+                };
+
+                return audioWs;
+            } catch (error) {
+                console.error('Error creating Audio WebSocket:', error);
+                return null;
+            }
+        }
 
         // 음성 녹음 토글
         async function toggleVoiceRecording() {
             const voiceBtn = document.getElementById('voiceBtn');
 
             if (!isRecording) {
+                // 현재 스레드가 없으면 새로 생성
+                if (!currentThread) {
+                    await createNewThread();
+                }
+
+                if (!currentThread) {
+                    alert('채팅방 생성에 실패했습니다.');
+                    return;
+                }
+
                 // 녹음 시작
                 try {
+                    // Audio WebSocket 연결
+                    audioWs = connectAudioWebSocket();
+                    if (!audioWs) {
+                        alert('음성 서버 연결에 실패했습니다.');
+                        return;
+                    }
+
+                    // WebSocket 연결 대기
+                    await new Promise((resolve, reject) => {
+                        const timeout = setTimeout(() => reject(new Error('Connection timeout')), 3000);
+                        audioWs.onopen = () => {
+                            clearTimeout(timeout);
+                            resolve();
+                        };
+                        audioWs.onerror = () => {
+                            clearTimeout(timeout);
+                            reject(new Error('Connection error'));
+                        };
+                    });
+
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                     audioChunks = [];
+                    audioSeq = 0;
+
+                    // 메타 정보 전송
+                    const audioMeta = {
+                        type: 'START',
+                        lang: window.i18n ? window.i18n.getLanguageCode(window.i18n.getCurrentLanguage()) : 'KOREAN',
+                        mimeType: 'audio/webm',
+                        roomId: currentThread.id
+                    };
+                    audioWs.send(JSON.stringify(audioMeta));
+                    console.log('Audio meta sent:', audioMeta);
 
                     mediaRecorder.ondataavailable = (event) => {
-                        if (event.data.size > 0) {
-                            audioChunks.push(event.data);
+                        if (event.data.size > 0 && audioWs && audioWs.readyState === WebSocket.OPEN) {
+                            // Blob을 ArrayBuffer로 변환 후 시퀀스 번호와 함께 전송
+                            event.data.arrayBuffer().then(body => {
+                                const out = new Uint8Array(4 + body.byteLength);
+                                const view = new DataView(out.buffer);
+                                view.setUint32(0, audioSeq);
+                                out.set(new Uint8Array(body), 4);
+                                audioWs.send(out);
+                                console.log(`Audio chunk sent: seq=${audioSeq}, size=${body.byteLength}B`);
+                                audioSeq++;
+                            });
                         }
                     };
 
                     mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        // TODO: WebSocket으로 음성 데이터 전송
-                        console.log('Audio recorded:', audioBlob);
-                        alert('음성 녹음 완료! (WebSocket 음성 전송 기능 구현 필요)');
+                        // FINISH 신호 전송
+                        if (audioWs && audioWs.readyState === WebSocket.OPEN) {
+                            audioWs.send(JSON.stringify({ type: 'FINISH' }));
+                            console.log('Audio FINISH sent');
+                        }
+                        // 스트림 정리
+                        stream.getTracks().forEach(track => track.stop());
                     };
 
-                    mediaRecorder.start();
+                    // 100ms마다 청크 전송
+                    mediaRecorder.start(100);
                     isRecording = true;
                     voiceBtn.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
                     console.log('Recording started');
                 } catch (error) {
-                    console.error('Error accessing microphone:', error);
-                    alert('마이크 접근 권한이 필요합니다.');
+                    console.error('Error starting recording:', error);
+                    alert('녹음 시작 실패: ' + error.message);
+                    if (audioWs) {
+                        audioWs.close();
+                        audioWs = null;
+                    }
                 }
             } else {
                 // 녹음 중지
                 if (mediaRecorder && mediaRecorder.state === 'recording') {
                     mediaRecorder.stop();
-                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
                     isRecording = false;
                     voiceBtn.style.background = 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)';
                     console.log('Recording stopped');

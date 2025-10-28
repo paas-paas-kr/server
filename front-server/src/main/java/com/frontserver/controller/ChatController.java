@@ -17,7 +17,8 @@ public class ChatController {
 
     @GetMapping("/{threadId}")
     public String chatRoom(@PathVariable String threadId, Model model) {
-        model.addAttribute("threadId", threadId);
-        return "chat/room";
+        // ChatGPT 스타일: 모든 채팅은 list.html에서 처리
+        // threadId가 있으면 list.html에서 해당 채팅방을 자동 선택하도록 리다이렉트
+        return "redirect:/chat";
     }
 }

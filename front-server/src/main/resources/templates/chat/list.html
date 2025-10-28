@@ -424,7 +424,13 @@
             }
 
             const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsHost = window.API_BASE_URL ? new URL(window.API_BASE_URL).host : window.location.host;
+            // 프로덕션: 현재 도메인 사용, 로컬: API_BASE_URL 사용
+            let wsHost;
+            if (window.API_BASE_URL && window.API_BASE_URL !== '') {
+                wsHost = new URL(window.API_BASE_URL).host;
+            } else {
+                wsHost = window.location.host;
+            }
             const wsUrl = `${wsProtocol}//${wsHost}/ws/chat?token=${token}`;
 
             console.log('Connecting to WebSocket:', wsUrl);

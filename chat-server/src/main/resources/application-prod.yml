@@ -4,21 +4,23 @@ logging:
     org.springframework.web: INFO
     org.springframework.web.reactive: INFO
     org.springframework.web.server: INFO
-    root: info
-    com.example.chat: info
+    root: INFO
+    com.example.chat: INFO
 
 app:
   audio:
-    ffmpeg-path: "${FFMPEG_PATH}"
+    ffmpeg-path: ${FFMPEG_PATH}
   gcp:
-    sa.path: "${GCP_SA_PATH}"
+    project-id: ${GCP_PROJECT_ID}
+    sa.path: ${GCP_SA_PATH}
   stt:
-    api-key-id: "${APP_STT_API_KEY_ID}"
-    api-key: "${APP_STT_API_KEY}"
-    trans:
-      api-key-id: "${APP_TRANS_API_KEY_ID}"
-      api-key: "${APP_TRANS_API_KEY}"
-    llm:
-      api-key: "${APP_LLM_API_KEY}"
-    vertex:
-      data-store-id: "${APP_VERTEX_DATA_STORE_ID}"
+    api-key-id: ${APP_STT_API_KEY_ID}
+    api-key: ${APP_STT_API_KEY}
+  trans:
+    api-key-id: ${APP_TRANS_API_KEY_ID}
+    api-key: ${APP_TRANS_API_KEY}
+  llm:
+    api-key: ${APP_LLM_API_KEY}
+  vertex:
+    project-id: ${GCP_PROJECT_ID}
+    data-store-id: ${APP_VERTEX_DATA_STORE_ID}

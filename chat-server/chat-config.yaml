@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: chat-config
+
+data:
+  # Spring profile
+  spring-profiles-active: prod
+
+  # GCP Project ID
+  gcp-project-id: paas-paas

@@ -26,6 +26,14 @@
         <!-- 입력 영역 -->
         <div class="chat-input-container">
             <form class="chat-input-form" onsubmit="sendMessage(event)">
+                <button type="button" class="voice-btn" id="voiceBtn" onclick="toggleVoiceRecording()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                </button>
                 <textarea
                     class="chat-input"
                     id="messageInput"
@@ -43,29 +51,231 @@
         </div>
     </div>
 
+    <script src="/js/config.js"></script>
+    <script src="/js/i18n.js"></script>
     <script th:inline="javascript">
         const threadId = /*[[${threadId}]]*/ '';
         let currentThread = null;
+        let ws = null;
+        let audioWs = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 5;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+
+        // WebSocket 연결
+        function connectWebSocket() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                console.error('No access token found');
+                addMessage('ai', '로그인이 필요합니다. 다시 로그인해주세요.');
+                return;
+            }
+
+            // WebSocket URL 생성
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsHost = window.API_BASE_URL ? new URL(window.API_BASE_URL).host : window.location.host;
+            const wsUrl = `${wsProtocol}//${wsHost}/ws/chat?token=${token}`;
+
+            console.log('Connecting to WebSocket:', wsUrl);
+
+            try {
+                ws = new WebSocket(wsUrl);
+
+                ws.onopen = function(event) {
+                    console.log('WebSocket connected');
+                    reconnectAttempts = 0;
+
+                    // 연결 시작 메시지 전송
+                    sendWebSocketMessage({
+                        type: 'START',
+                        text: '',
+                        userId: 'user',
+                        lang: window.i18n ? window.i18n.getLanguageCode(window.i18n.getCurrentLanguage()) : 'KOREAN',
+                        roomId: threadId
+                    });
+                };
+
+                ws.onmessage = function(event) {
+                    console.log('WebSocket message received:', event.data);
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleWebSocketMessage(data);
+                    } catch (error) {
+                        console.error('Error parsing WebSocket message:', error);
+                    }
+                };
+
+                ws.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                };
+
+                ws.onclose = function(event) {
+                    console.log('WebSocket closed:', event.code, event.reason);
+
+                    // 자동 재연결 시도
+                    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                        reconnectAttempts++;
+                        console.log(`Reconnecting... (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+                        setTimeout(connectWebSocket, 2000 * reconnectAttempts);
+                    } else {
+                        addMessage('ai', '서버와의 연결이 끊어졌습니다. 페이지를 새로고침해주세요.');
+                    }
+                };
+            } catch (error) {
+                console.error('Error creating WebSocket:', error);
+            }
+        }
+
+        // WebSocket으로 메시지 전송
+        function sendWebSocketMessage(message) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(message));
+                console.log('Message sent:', message);
+            } else {
+                console.error('WebSocket is not connected');
+            }
+        }
+
+        // WebSocket 메시지 처리
+        function handleWebSocketMessage(data) {
+            console.log('Handling message:', data);
+
+            if (data.type === 'nlp-stream') {
+                // NLP 스트리밍 응답 처리
+                if (data.event === 'original_text') {
+                    // 최종 번역된 AI 응답
+                    const aiText = data.data?.text || '';
+                    if (aiText) {
+                        updateOrAddAIMessage(aiText);
+                    }
+                } else if (data.event === 'delta') {
+                    // 스트리밍 중간 텍스트 (선택적 표시)
+                    const delta = data.data?.delta || '';
+                    if (delta) {
+                        appendToLastAIMessage(delta);
+                    }
+                }
+            } else if (data.type === 'CHAT' || data.type === 'TRANS') {
+                // 일반 채팅 메시지 또는 번역 메시지
+                const text = data.text || data.data?.text || '';
+                if (text) {
+                    updateOrAddAIMessage(text);
+                }
+            } else if (data.type === 'ERROR') {
+                // 에러 메시지
+                const errorText = data.text || '오류가 발생했습니다.';
+                addMessage('ai', errorText);
+            }
+        }
+
+        // AI 메시지 업데이트 또는 추가
+        let lastAIMessageContent = '';
+        function updateOrAddAIMessage(text) {
+            if (lastAIMessageContent === text) {
+                return; // 중복 방지
+            }
+
+            lastAIMessageContent = text;
+
+            // 마지막 메시지가 AI 메시지인지 확인
+            if (currentThread.messages.length > 0) {
+                const lastMessage = currentThread.messages[currentThread.messages.length - 1];
+                if (lastMessage.role === 'ai' && !lastMessage.finalized) {
+                    // 기존 AI 메시지 업데이트
+                    lastMessage.content = text;
+                    lastMessage.finalized = true;
+                } else {
+                    // 새 AI 메시지 추가
+                    addMessage('ai', text);
+                }
+            } else {
+                // 새 AI 메시지 추가
+                addMessage('ai', text);
+            }
+            saveThread();
+            renderMessages();
+        }
+
+        // 마지막 AI 메시지에 텍스트 추가 (스트리밍용)
+        function appendToLastAIMessage(delta) {
+            if (currentThread.messages.length > 0) {
+                const lastMessage = currentThread.messages[currentThread.messages.length - 1];
+                if (lastMessage.role === 'ai' && !lastMessage.finalized) {
+                    lastMessage.content += delta;
+                    renderMessages();
+                    return;
+                }
+            }
+
+            // 마지막 메시지가 AI가 아니면 새로 추가
+            const newMessage = {
+                role: 'ai',
+                content: delta,
+                timestamp: new Date().toISOString(),
+                finalized: false
+            };
+            currentThread.messages.push(newMessage);
+            renderMessages();
+        }
+
+        // 서버에서 채팅 메시지 가져오기
+        async function getChatMessages(roomId) {
+            try {
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    console.error('No access token found');
+                    return [];
+                }
+
+                const url = `${window.API_BASE_URL}/api/chat/conversations/room/${roomId}/messages?size=50`;
+                console.log('Fetching messages from:', url);
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to fetch messages:', response.status);
+                    return [];
+                }
+
+                const data = await response.json();
+                console.log('Messages received:', data);
+
+                const messages = data.items || [];
+
+                // 서버 데이터를 프론트 형식으로 변환 (역순 정렬)
+                return messages.reverse().map(msg => ({
+                    role: msg.isUserMessage ? 'user' : 'ai',
+                    content: msg.content || msg.text,
+                    timestamp: msg.createdAt
+                }));
+            } catch (error) {
+                console.error('Error fetching messages:', error);
+                return [];
+            }
+        }
 
         // 스레드 데이터 로드
-        function loadThread() {
-            const threads = JSON.parse(localStorage.getItem('chatThreads') || '[]');
-            currentThread = threads.find(t => t.id === threadId);
+        async function loadThread() {
+            currentThread = {
+                id: threadId,
+                title: '채팅',
+                lastMessage: '',
+                messageCount: 0,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                messages: []
+            };
 
-            if (!currentThread) {
-                // 스레드가 없으면 생성
-                currentThread = {
-                    id: threadId,
-                    title: '새 대화',
-                    lastMessage: '',
-                    messageCount: 0,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    messages: []
-                };
-                threads.unshift(currentThread);
-                localStorage.setItem('chatThreads', JSON.stringify(threads));
-            }
+            // 서버에서 메시지 로드
+            currentThread.messages = await getChatMessages(threadId);
 
             document.getElementById('chatTitle').textContent = currentThread.title;
             renderMessages();
@@ -111,6 +321,12 @@
 
             if (!message) return;
 
+            // WebSocket 연결 확인
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                addMessage('ai', '서버와 연결되어 있지 않습니다. 페이지를 새로고침해주세요.');
+                return;
+            }
+
             // 사용자 메시지 추가
             addMessage('user', message);
             input.value = '';
@@ -123,10 +339,27 @@
             sendBtn.disabled = true;
             sendBtn.innerHTML = '<div class="spinner"></div>';
 
-            // AI 응답 시뮬레이션 (실제로는 API 호출)
             try {
-                // TODO: 실제 API 호출로 교체
-                await simulateAIResponse(message);
+                // WebSocket으로 메시지 전송
+                sendWebSocketMessage({
+                    type: 'CHAT',
+                    text: message,
+                    userId: 'user',
+                    lang: window.i18n ? window.i18n.getLanguageCode(window.i18n.getCurrentLanguage()) : 'KOREAN',
+                    roomId: threadId
+                });
+
+                // 임시 AI 메시지 추가 (응답 대기 중)
+                lastAIMessageContent = '';
+                const tempMessage = {
+                    role: 'ai',
+                    content: '...',
+                    timestamp: new Date().toISOString(),
+                    finalized: false
+                };
+                currentThread.messages.push(tempMessage);
+                saveThread();
+                renderMessages();
             } catch (error) {
                 console.error('Error sending message:', error);
                 addMessage('ai', '죄송합니다. 오류가 발생했습니다. 다시 시도해주세요.');
@@ -139,26 +372,6 @@
                     </svg>
                 `;
             }
-        }
-
-        // AI 응답 시뮬레이션
-        async function simulateAIResponse(userMessage) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // 간단한 응답 로직
-            let aiResponse = '';
-
-            if (userMessage.includes('안녕') || userMessage.includes('하이') || userMessage.includes('hi')) {
-                aiResponse = '안녕하세요! 다문화 가정 상담 AI입니다. 무엇을 도와드릴까요?';
-            } else if (userMessage.includes('도와') || userMessage.includes('도움')) {
-                aiResponse = '네, 기꺼이 도와드리겠습니다. 구체적으로 어떤 부분이 궁금하신가요?';
-            } else if (userMessage.includes('문서') || userMessage.includes('서류')) {
-                aiResponse = '문서 관련 도움이 필요하시군요. 문서 메뉴에서 파일을 업로드하시면 내용을 요약해드릴 수 있습니다.';
-            } else {
-                aiResponse = `"${userMessage}"에 대해 말씀하셨군요. 더 자세히 설명해주시면 더 나은 답변을 드릴 수 있습니다.`;
-            }
-
-            addMessage('ai', aiResponse);
         }
 
         // 메시지 추가
@@ -184,22 +397,7 @@
                 document.getElementById('chatTitle').textContent = currentThread.title;
             }
 
-            saveThread();
             renderMessages();
-        }
-
-        // 스레드 저장
-        function saveThread() {
-            const threads = JSON.parse(localStorage.getItem('chatThreads') || '[]');
-            const index = threads.findIndex(t => t.id === threadId);
-
-            if (index >= 0) {
-                threads[index] = currentThread;
-            } else {
-                threads.unshift(currentThread);
-            }
-
-            localStorage.setItem('chatThreads', JSON.stringify(threads));
         }
 
         // 키 이벤트 처리
@@ -227,9 +425,138 @@
             window.location.href = '/chat';
         }
 
-        // 페이지 로드 시 스레드 로드
-        document.addEventListener('DOMContentLoaded', function() {
-            loadThread();
+        // 오디오 WebSocket 연결
+        function connectAudioWebSocket() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                console.error('No access token found');
+                return null;
+            }
+
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsHost = window.API_BASE_URL ? new URL(window.API_BASE_URL).host : window.location.host;
+            const wsUrl = `${wsProtocol}//${wsHost}/ws/audio?token=${token}`;
+
+            console.log('Connecting to Audio WebSocket:', wsUrl);
+
+            try {
+                const audioSocket = new WebSocket(wsUrl);
+
+                audioSocket.onopen = function(event) {
+                    console.log('Audio WebSocket connected');
+                };
+
+                audioSocket.onmessage = function(event) {
+                    console.log('Audio WebSocket message received:', event.data);
+                    try {
+                        const data = JSON.parse(event.data);
+                        // STT 결과를 입력창에 표시
+                        if (data.text) {
+                            const input = document.getElementById('messageInput');
+                            input.value = data.text;
+                        }
+                    } catch (error) {
+                        console.error('Error parsing audio message:', error);
+                    }
+                };
+
+                audioSocket.onerror = function(error) {
+                    console.error('Audio WebSocket error:', error);
+                };
+
+                audioSocket.onclose = function(event) {
+                    console.log('Audio WebSocket closed:', event.code, event.reason);
+                };
+
+                return audioSocket;
+            } catch (error) {
+                console.error('Error creating Audio WebSocket:', error);
+                return null;
+            }
+        }
+
+        // 음성 녹음 토글
+        async function toggleVoiceRecording() {
+            const voiceBtn = document.getElementById('voiceBtn');
+
+            if (!isRecording) {
+                // 녹음 시작
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    // Audio WebSocket 연결
+                    audioWs = connectAudioWebSocket();
+                    if (!audioWs) {
+                        alert('음성 서버와 연결할 수 없습니다.');
+                        return;
+                    }
+
+                    mediaRecorder.ondataavailable = function(event) {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                            // WebSocket으로 실시간 오디오 스트리밍
+                            if (audioWs && audioWs.readyState === WebSocket.OPEN) {
+                                audioWs.send(event.data);
+                            }
+                        }
+                    };
+
+                    mediaRecorder.onstop = function() {
+                        console.log('Recording stopped');
+                        // 스트림 종료
+                        stream.getTracks().forEach(track => track.stop());
+
+                        // Audio WebSocket 종료
+                        if (audioWs) {
+                            audioWs.close();
+                            audioWs = null;
+                        }
+                    };
+
+                    mediaRecorder.start(100); // 100ms마다 데이터 전송
+                    isRecording = true;
+
+                    // 버튼 스타일 변경
+                    voiceBtn.style.backgroundColor = '#ef4444';
+                    voiceBtn.style.color = 'white';
+                    console.log('Recording started');
+                } catch (error) {
+                    console.error('Error starting recording:', error);
+                    alert('마이크 접근 권한이 필요합니다.');
+                }
+            } else {
+                // 녹음 중지
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                    isRecording = false;
+
+                    // 버튼 스타일 복원
+                    voiceBtn.style.backgroundColor = '';
+                    voiceBtn.style.color = '';
+                    console.log('Recording stopped by user');
+                }
+            }
+        }
+
+        // 페이지 로드 시 스레드 로드 및 WebSocket 연결
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadThread();
+            connectWebSocket();
+        });
+
+        // 페이지 종료 시 WebSocket 연결 해제
+        window.addEventListener('beforeunload', function() {
+            if (ws) {
+                ws.close();
+            }
+            if (audioWs) {
+                audioWs.close();
+            }
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
         });
     </script>
 </body>

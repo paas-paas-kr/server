@@ -147,8 +147,13 @@
         </div>
     </div>
 
+    <script src="/js/config.js"></script>
+    <script src="/js/i18n.js"></script>
     <script>
         let currentThread = null;
+        let chatRooms = [];
+        let pageToken = null;
+        let hasMore = true;
 
         // 사용자 정보 로드
         function loadUserInfo() {
@@ -158,21 +163,58 @@
             document.getElementById('sidebarAvatar').textContent = (userInfo.name || defaultName).charAt(0);
         }
 
-        // 로컬 스토리지에서 채팅 스레드 목록 가져오기
-        function getChatThreads() {
-            const threads = localStorage.getItem('chatThreads');
-            return threads ? JSON.parse(threads) : [];
-        }
+        // 서버에서 채팅방 목록 가져오기
+        async function getChatThreads() {
+            try {
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    console.error('No access token found');
+                    return [];
+                }
 
-        // 채팅 스레드 목록 저장
-        function saveChatThreads(threads) {
-            localStorage.setItem('chatThreads', JSON.stringify(threads));
+                const url = `${window.API_BASE_URL}/api/chat/conversations/rooms?size=20`;
+                console.log('Fetching chat rooms from:', url);
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to fetch chat rooms:', response.status);
+                    return [];
+                }
+
+                const data = await response.json();
+                console.log('Chat rooms received:', data);
+
+                chatRooms = data.items || [];
+                pageToken = data.nextPageToken;
+                hasMore = data.hasMore || false;
+
+                // 서버 데이터 형식을 프론트 형식으로 변환
+                return chatRooms.map(room => ({
+                    id: room.roomId,
+                    title: room.title || '새 대화',
+                    lastMessage: room.lastMessage || '',
+                    messageCount: room.messageCount || 0,
+                    createdAt: room.createdAt,
+                    updatedAt: room.updatedAt,
+                    messages: [] // 메시지는 별도 조회
+                }));
+            } catch (error) {
+                console.error('Error fetching chat rooms:', error);
+                return [];
+            }
         }
 
         // 채팅 목록 렌더링
-        function renderThreadList() {
+        async function renderThreadList() {
             console.log('Rendering thread list');
-            const threads = getChatThreads();
+            const threads = await getChatThreads();
             const chatThreads = document.getElementById('chatThreads');
 
             if (!chatThreads) {
@@ -206,19 +248,65 @@
             console.log('Thread list rendered, total threads:', threads.length, 'active thread:', currentThread?.id);
         }
 
+        // 서버에서 채팅 메시지 가져오기
+        async function getChatMessages(roomId) {
+            try {
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    console.error('No access token found');
+                    return [];
+                }
+
+                const url = `${window.API_BASE_URL}/api/chat/conversations/room/${roomId}/messages?size=50`;
+                console.log('Fetching messages from:', url);
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to fetch messages:', response.status);
+                    return [];
+                }
+
+                const data = await response.json();
+                console.log('Messages received:', data);
+
+                const messages = data.items || [];
+
+                // 서버 데이터를 프론트 형식으로 변환 (역순 정렬)
+                return messages.reverse().map(msg => ({
+                    role: msg.isUserMessage ? 'user' : 'ai',
+                    content: msg.content || msg.text,
+                    timestamp: msg.createdAt
+                }));
+            } catch (error) {
+                console.error('Error fetching messages:', error);
+                return [];
+            }
+        }
+
         // 스레드 선택
-        function selectThread(threadId) {
+        async function selectThread(threadId) {
             console.log('Selecting thread:', threadId);
-            const threads = getChatThreads();
+            const threads = await getChatThreads();
             currentThread = threads.find(t => t.id === threadId);
 
             if (currentThread) {
                 console.log('Thread found:', currentThread);
+
+                // 서버에서 메시지 가져오기
+                currentThread.messages = await getChatMessages(threadId);
+
                 // 스레드 선택 시 웰컴 박스 숨기기
                 const welcomeBox = document.getElementById('welcomeBox');
                 if (welcomeBox) welcomeBox.style.display = 'none';
 
-                renderThreadList(); // active 상태 업데이트
+                await renderThreadList(); // active 상태 업데이트
                 renderMessages(); // 메시지 렌더링
             } else {
                 console.error('Thread not found:', threadId);
@@ -264,35 +352,191 @@
             }, 50);
         }
 
-        // 새 스레드 생성
-        function createNewThread() {
+        // 새 스레드 생성 (서버 API 호출)
+        async function createNewThread() {
             console.log('Creating new thread');
-            const threads = getChatThreads();
-            const newChatText = window.i18n ? window.i18n.translate('chat.newChat') : '새로운 대화';
-            const newThread = {
-                id: Date.now().toString(),
-                title: newChatText,
-                lastMessage: '',
-                messageCount: 0,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                messages: []
-            };
 
-            threads.unshift(newThread);
-            saveChatThreads(threads);
-            currentThread = newThread;
+            try {
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    console.error('No access token found');
+                    alert('로그인이 필요합니다.');
+                    return;
+                }
 
-            // 새 대화 시작 시 웰컴 박스 표시
-            const welcomeBox = document.getElementById('welcomeBox');
-            if (welcomeBox) welcomeBox.style.display = 'block';
+                const url = `${window.API_BASE_URL}/api/chat/conversations`;
+                console.log('Creating new chat room:', url);
 
-            renderThreadList();
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to create chat room:', response.status);
+                    alert('채팅방 생성에 실패했습니다.');
+                    return;
+                }
+
+                const newRoom = await response.json();
+                console.log('New room created:', newRoom);
+
+                const newChatText = window.i18n ? window.i18n.translate('chat.newChat') : '새로운 대화';
+                currentThread = {
+                    id: newRoom.roomId,
+                    title: newRoom.title || newChatText,
+                    lastMessage: '',
+                    messageCount: 0,
+                    createdAt: newRoom.createdAt,
+                    updatedAt: newRoom.updatedAt,
+                    messages: []
+                };
+
+                // 새 대화 시작 시 웰컴 박스 표시
+                const welcomeBox = document.getElementById('welcomeBox');
+                if (welcomeBox) welcomeBox.style.display = 'block';
+
+                await renderThreadList();
+                renderMessages();
+
+                // 입력창에 포커스
+                document.getElementById('messageInput').focus();
+                console.log('New thread created:', currentThread);
+            } catch (error) {
+                console.error('Error creating new thread:', error);
+                alert('채팅방 생성 중 오류가 발생했습니다.');
+            }
+        }
+
+        // WebSocket 연결
+        let ws = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 5;
+
+        function connectWebSocket() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                console.error('No access token found');
+                return;
+            }
+
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsHost = window.API_BASE_URL ? new URL(window.API_BASE_URL).host : window.location.host;
+            const wsUrl = `${wsProtocol}//${wsHost}/ws/chat?token=${token}`;
+
+            console.log('Connecting to WebSocket:', wsUrl);
+
+            try {
+                ws = new WebSocket(wsUrl);
+
+                ws.onopen = function(event) {
+                    console.log('WebSocket connected');
+                    reconnectAttempts = 0;
+                };
+
+                ws.onmessage = function(event) {
+                    console.log('WebSocket message received:', event.data);
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleWebSocketMessage(data);
+                    } catch (error) {
+                        console.error('Error parsing WebSocket message:', error);
+                    }
+                };
+
+                ws.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                };
+
+                ws.onclose = function(event) {
+                    console.log('WebSocket closed:', event.code, event.reason);
+
+                    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                        reconnectAttempts++;
+                        console.log(`Reconnecting... (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+                        setTimeout(connectWebSocket, 2000 * reconnectAttempts);
+                    }
+                };
+            } catch (error) {
+                console.error('Error creating WebSocket:', error);
+            }
+        }
+
+        function sendWebSocketMessage(message) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(message));
+                console.log('Message sent:', message);
+            } else {
+                console.error('WebSocket is not connected');
+            }
+        }
+
+        let lastAIMessageContent = '';
+        function handleWebSocketMessage(data) {
+            console.log('Handling message:', data);
+
+            if (data.type === 'nlp-stream') {
+                if (data.event === 'original_text') {
+                    const aiText = data.data?.text || '';
+                    if (aiText) {
+                        updateOrAddAIMessage(aiText);
+                    }
+                } else if (data.event === 'delta') {
+                    const delta = data.data?.delta || '';
+                    if (delta) {
+                        appendToLastAIMessage(delta);
+                    }
+                }
+            } else if (data.type === 'CHAT' || data.type === 'TRANS') {
+                const text = data.text || data.data?.text || '';
+                if (text) {
+                    updateOrAddAIMessage(text);
+                }
+            } else if (data.type === 'ERROR') {
+                const errorText = data.text || '오류가 발생했습니다.';
+                addMessage('ai', errorText);
+            }
+        }
+
+        function updateOrAddAIMessage(text) {
+            if (lastAIMessageContent === text) return;
+            lastAIMessageContent = text;
+
+            if (currentThread.messages.length > 0) {
+                const lastMessage = currentThread.messages[currentThread.messages.length - 1];
+                if (lastMessage.role === 'ai' && !lastMessage.finalized) {
+                    lastMessage.content = text;
+                    lastMessage.finalized = true;
+                } else {
+                    addMessage('ai', text);
+                }
+            } else {
+                addMessage('ai', text);
+            }
             renderMessages();
+        }
 
-            // 입력창에 포커스
-            document.getElementById('messageInput').focus();
-            console.log('New thread created:', newThread);
+        function appendToLastAIMessage(delta) {
+            if (currentThread.messages.length > 0) {
+                const lastMessage = currentThread.messages[currentThread.messages.length - 1];
+                if (lastMessage.role === 'ai' && !lastMessage.finalized) {
+                    lastMessage.content += delta;
+                    renderMessages();
+                    return;
+                }
+            }
+
+            const newMessage = {
+                role: 'ai',
+                content: delta,
+                timestamp: new Date().toISOString(),
+                finalized: false
+            };
+            currentThread.messages.push(newMessage);
+            renderMessages();
         }
 
         // 메시지 전송
@@ -312,7 +556,12 @@
             // 현재 스레드가 없으면 새로 생성
             if (!currentThread) {
                 console.log('No current thread, creating new one');
-                createNewThread();
+                await createNewThread();
+            }
+
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('서버와 연결되어 있지 않습니다. 페이지를 새로고침해주세요.');
+                return;
             }
 
             console.log('Current thread:', currentThread);
@@ -327,9 +576,24 @@
             sendBtn.disabled = true;
             sendBtn.innerHTML = '<div class="spinner"></div>';
 
-            // AI 응답 시뮬레이션 (실제로는 API 호출)
             try {
-                await simulateAIResponse(message);
+                sendWebSocketMessage({
+                    type: 'CHAT',
+                    text: message,
+                    userId: 'user',
+                    lang: window.i18n ? window.i18n.getLanguageCode(window.i18n.getCurrentLanguage()) : 'KOREAN',
+                    roomId: currentThread.id
+                });
+
+                lastAIMessageContent = '';
+                const tempMessage = {
+                    role: 'ai',
+                    content: '...',
+                    timestamp: new Date().toISOString(),
+                    finalized: false
+                };
+                currentThread.messages.push(tempMessage);
+                renderMessages();
             } catch (error) {
                 console.error('Error sending message:', error);
                 addMessage('ai', '죄송합니다. 오류가 발생했습니다. 다시 시도해주세요.');
@@ -342,25 +606,6 @@
                     </svg>
                 `;
             }
-        }
-
-        // AI 응답 시뮬레이션
-        async function simulateAIResponse(userMessage) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            let aiResponse = '';
-
-            if (userMessage.includes('안녕') || userMessage.includes('하이') || userMessage.includes('hi')) {
-                aiResponse = '안녕하세요! 다문화 가정 상담 AI입니다. 무엇을 도와드릴까요?';
-            } else if (userMessage.includes('도와') || userMessage.includes('도움')) {
-                aiResponse = '네, 기꺼이 도와드리겠습니다. 구체적으로 어떤 부분이 궁금하신가요?';
-            } else if (userMessage.includes('문서') || userMessage.includes('서류')) {
-                aiResponse = '문서 관련 도움이 필요하시군요. 왼쪽 하단의 "문서 요약" 메뉴에서 파일을 업로드하시면 내용을 요약해드릴 수 있습니다.';
-            } else {
-                aiResponse = `"${userMessage}"에 대해 말씀하셨군요. 더 자세히 설명해주시면 더 나은 답변을 드릴 수 있습니다.`;
-            }
-
-            addMessage('ai', aiResponse);
         }
 
         // 메시지 추가
@@ -391,24 +636,8 @@
                 currentThread.title = content.substring(0, 30) + (content.length > 30 ? '...' : '');
             }
 
-            saveThread();
             renderMessages();
-            renderThreadList();
             console.log('Message added successfully');
-        }
-
-        // 스레드 저장
-        function saveThread() {
-            const threads = getChatThreads();
-            const index = threads.findIndex(t => t.id === currentThread.id);
-
-            if (index >= 0) {
-                threads[index] = currentThread;
-            } else {
-                threads.unshift(currentThread);
-            }
-
-            saveChatThreads(threads);
         }
 
         // 키 이벤트 처리
@@ -439,7 +668,7 @@
         }
 
         // 페이지 로드 시 초기화
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             // 로그인 체크
             const isLoggedIn = localStorage.getItem('isLoggedIn');
             if (!isLoggedIn || isLoggedIn !== 'true') {
@@ -455,13 +684,16 @@
             // 사용자 정보 로드
             loadUserInfo();
 
+            // WebSocket 연결
+            connectWebSocket();
+
             // 채팅 목록 렌더링
-            renderThreadList();
+            await renderThreadList();
 
             // 첫 번째 스레드가 있으면 선택
-            const threads = getChatThreads();
+            const threads = await getChatThreads();
             if (threads.length > 0) {
-                selectThread(threads[0].id);
+                await selectThread(threads[0].id);
             } else {
                 // 스레드가 없으면 빈 상태 표시
                 const emptyState = document.getElementById('emptyState');
@@ -470,8 +702,13 @@
                 if (welcomeBox) welcomeBox.style.display = 'block';
             }
         });
-    </script>
 
-    <script src="/js/i18n.js"></script>
+        // 페이지 종료 시 WebSocket 연결 해제
+        window.addEventListener('beforeunload', function() {
+            if (ws) {
+                ws.close();
+            }
+        });
+    </script>
 </body>
 </html>

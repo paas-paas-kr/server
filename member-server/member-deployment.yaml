@@ -5,7 +5,7 @@ metadata:
   name: member-deployment
 
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: member-app
@@ -73,5 +73,12 @@ spec:
                 secretKeyRef:
                   name: member-secret
                   key: db-password
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
       imagePullSecrets:
         - name: member-server-image-secret

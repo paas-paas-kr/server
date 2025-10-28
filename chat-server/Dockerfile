@@ -1,10 +1,12 @@
 FROM eclipse-temurin:17-jdk-jammy
 
-# FFmpeg 설치 (음성 처리용)
-RUN apt-get update && \
-    apt-get install -y ffmpeg && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Static FFmpeg 바이너리 다운로드 (apt-get 불필요)
+ADD https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz /tmp/ffmpeg.tar.xz
+RUN cd /tmp && \
+    tar xf ffmpeg.tar.xz && \
+    mv ffmpeg-*-amd64-static/ffmpeg /usr/local/bin/ffmpeg && \
+    chmod +x /usr/local/bin/ffmpeg && \
+    rm -rf /tmp/ffmpeg*
 
 # FFmpeg 설치 확인
 RUN ffmpeg -version

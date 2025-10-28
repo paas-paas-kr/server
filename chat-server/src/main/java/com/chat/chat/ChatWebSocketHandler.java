@@ -125,12 +125,12 @@ public class ChatWebSocketHandler implements WebSocketHandler {
                                 // LLM 답변을 받은 이 시점에 '질문'과 '답변'을 모두 안다.
                                 // .subscribe()를 호출하여 DB 저장을 백그라운드로 보내고 기다리지 않는다.
 
-                                conversationService.createMessage(text, translatedAnswer,/*roomId*/"gimin_room")
+                                conversationService.createMessage(text, translatedAnswer, roomId != null ? roomId : session.getId())
                                         .subscribe(
                                                 // 성공 시 로그 (저장된 메시지 ID 등)
-                                                savedMessage -> log.info("[WS:{}] 메시지 저장 성공: {}", session.getId(), savedMessage.getId()),
+                                                savedMessage -> log.info("[WS:{}] 메시지 저장 성공: roomId={}, messageId={}", session.getId(), roomId, savedMessage.getId()),
                                                 // 실패 시 에러 로그
-                                                err -> log.error("[WS:{}] '질문/답변' DB 저장 실패: {}", session.getId(), err.getMessage())
+                                                err -> log.error("[WS:{}] '질문/답변' DB 저장 실패: roomId={}, error={}", session.getId(), roomId, err.getMessage())
                                         );
                             })
                             .then();

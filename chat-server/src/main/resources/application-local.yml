@@ -1,5 +1,7 @@
-server:
-  port: 8083
+spring:
+  config:
+    import: optional:file:chat-server/.env[.properties]
+
 logging:
   level:
     reactor.netty: DEBUG
@@ -7,18 +9,21 @@ logging:
     org.springframework.web.reactive: DEBUG
     org.springframework.web.reactive.client.ExchangeFunctions: TRACE
     org.springframework.web.server: DEBUG
-    root: info
-    com.example.chat: debug
+    root: INFO
+    com.example.chat: DEBUG
 
 app:
   audio:
-    # 내 PC의 로컬 경로
-    ffmpeg-path: "C:\\ffmpeg\\bin\\ffmpeg.exe"
+    ffmpeg-path: ${FFMPEG_PATH:C:\\ffmpeg\\bin\\ffmpeg.exe}
   gcp:
-    # 내 PC의 서비스 계정 키 경로
-    sa.path: C:/keys/paas-paas-1218c3347d8e.json
-
-spring:
-  config:
-    # 로컬에서만 비밀 설정 파일을 읽어옴
-    import: "optional:classpath:application-secret.yml"
+    sa.path: ${GCP_SA_PATH:C:/keys/paas-paas-1218c3347d8e.json}
+  stt:
+    api-key-id: ${APP_STT_API_KEY_ID}
+    api-key: ${APP_STT_API_KEY}
+  trans:
+    api-key-id: ${APP_TRANS_API_KEY_ID}
+    api-key: ${APP_TRANS_API_KEY}
+  llm:
+    api-key: ${APP_LLM_API_KEY}
+  vertex:
+    data-store-id: ${APP_VERTEX_DATA_STORE_ID}

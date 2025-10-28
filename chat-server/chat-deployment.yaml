@@ -39,9 +39,9 @@ spec:
             - name: GCP_SA_PATH
               value: "/secrets/gcp/service-account.json"
 
-            # FFmpeg 경로 (Dockerfile에서 static 바이너리 설치)
+            # FFmpeg 경로 (Alpine apk로 설치)
             - name: FFMPEG_PATH
-              value: "/usr/local/bin/ffmpeg"
+              value: "/usr/bin/ffmpeg"
 
             # STT API Keys (Naver Clova Speech)
             - name: APP_STT_API_KEY_ID

@@ -85,13 +85,6 @@ spec:
             - name: gcp-service-account
               mountPath: /secrets/gcp
               readOnly: true
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "150m"
-            limits:
-              memory: "512Mi"
-              cpu: "300m"
       volumes:
         - name: gcp-service-account
           secret:

@@ -73,12 +73,5 @@ spec:
                 secretKeyRef:
                   name: member-secret
                   key: db-password
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "150m"
-            limits:
-              memory: "512Mi"
-              cpu: "300m"
       imagePullSecrets:
         - name: member-server-image-secret

@@ -63,12 +63,5 @@ spec:
                 secretKeyRef:
                   name: gateway-secret
                   key: jwt-secret
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "150m"
-            limits:
-              memory: "512Mi"
-              cpu: "300m"
       imagePullSecrets:
         - name: gateway-server-image-secret

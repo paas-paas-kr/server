@@ -121,13 +121,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "150m"
-            limits:
-              memory: "512Mi"
-              cpu: "300m"
 
       imagePullSecrets:
         - name: document-server-image-secret

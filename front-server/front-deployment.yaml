@@ -28,12 +28,5 @@ spec:
                 configMapKeyRef:
                   name: front-config
                   key: spring-profiles-active
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "150m"
-            limits:
-              memory: "512Mi"
-              cpu: "300m"
       imagePullSecrets:
         - name: front-server-image-secret

@@ -43,13 +43,23 @@ spring:
                 - name: JwtAuthenticationFilter
               order: 4
 
-            # Chat Service 라우팅 (JWT 필요)
+            # Chat Service WebSocket (JWT 필요)
+            - id: chat-websocket
+              uri: ${CHAT_SERVICE_WS_URL}
+              predicates:
+                - Path=/ws/chat, /ws/audio
+              filters:
+                - name: JwtAuthenticationFilter
+              order: 5
+
+            # Chat Service REST API (JWT 필요)
             - id: chat-service
               uri: ${CHAT_SERVICE_URL}
               predicates:
                 - Path=/api/chat/**
               filters:
                 - name: JwtAuthenticationFilter
+              order: 6
 
             # Report Service 라우팅 (JWT 필요)
             - id: report-service

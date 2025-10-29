@@ -43,6 +43,11 @@ spec:
                 configMapKeyRef:
                   name: gateway-config
                   key: chat-service-url
+            - name: CHAT_SERVICE_WS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gateway-config
+                  key: chat-service-ws-url
             - name: REPORT_SERVICE_URL
               valueFrom:
                 configMapKeyRef:

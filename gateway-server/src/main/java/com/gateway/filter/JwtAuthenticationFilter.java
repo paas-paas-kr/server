@@ -35,16 +35,30 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
 
-            // Authorization 헤더 확인
-            if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-                return onError(exchange, GlobalErrorCode.UNAUTHORIZED);
+            String token = null;
+
+            // 1. Authorization 헤더에서 토큰 추출 시도
+            if (request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+                String authorizationHeader = request.getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
+                token = extractToken(authorizationHeader);
             }
 
-            String authorizationHeader = request.getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
-            String token = extractToken(authorizationHeader);
+            // 2. WebSocket 연결의 경우 query parameter에서 토큰 추출
+            if (token == null && request.getURI().getQuery() != null) {
+                String query = request.getURI().getQuery();
+                if (query.contains("token=")) {
+                    String[] params = query.split("&");
+                    for (String param : params) {
+                        if (param.startsWith("token=")) {
+                            token = param.substring(6); // "token=".length()
+                            break;
+                        }
+                    }
+                }
+            }
 
             if (token == null) {
-                return onError(exchange, GlobalErrorCode.INVALID_CREDENTIALS);
+                return onError(exchange, GlobalErrorCode.UNAUTHORIZED);
             }
 
             // JWT 토큰 검증

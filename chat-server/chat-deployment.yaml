@@ -5,7 +5,7 @@ metadata:
   name: chat-deployment
 
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: chat-app
@@ -20,6 +20,74 @@ spec:
           image: paaspaas.kr.ncr.ntruss.com/chat-server:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8080
+            - containerPort: 8083
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: chat-config
+                  key: spring-profiles-active
+
+            # GCP 설정
+            - name: GCP_PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: chat-config
+                  key: gcp-project-id
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "/secrets/gcp/service-account.json"
+            - name: GCP_SA_PATH
+              value: "/secrets/gcp/service-account.json"
+
+            # FFmpeg 경로 (Alpine apk로 설치)
+            - name: FFMPEG_PATH
+              value: "/usr/bin/ffmpeg"
+
+            # STT API Keys (Naver Clova Speech)
+            - name: APP_STT_API_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: chat-secret
+                  key: naver-stt-client-id
+            - name: APP_STT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: chat-secret
+                  key: naver-stt-client-secret
+
+            # Translation API Keys (Papago)
+            - name: APP_TRANS_API_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: chat-secret
+                  key: papago-client-id
+            - name: APP_TRANS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: chat-secret
+                  key: papago-client-secret
+
+            # LLM API Key (Google)
+            - name: APP_LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: chat-secret
+                  key: google-api-key
+
+            # Vertex AI Data Store ID
+            - name: APP_VERTEX_DATA_STORE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: chat-secret
+                  key: vertex-data-store-id
+                  optional: true
+          volumeMounts:
+            - name: gcp-service-account
+              mountPath: /secrets/gcp
+              readOnly: true
+      volumes:
+        - name: gcp-service-account
+          secret:
+            secretName: gcp-service-account-key
       imagePullSecrets:
         - name: chat-server-image-secret

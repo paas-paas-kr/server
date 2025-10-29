@@ -2,8 +2,6 @@
 
 #  온가: 온 세상 가족
 
-### ✨ 언어의 장벽 없이, 공공 정보를 정확하고 쉽게. ✨
-
 </div>
 
 ## 📋 목차
@@ -115,4 +113,5 @@
 | <img src="https://github.com/gimin0226.png" height="150" width="150"> | <img src="https://github.com/chanmin-00.png" height="150" width="150"> |
 | [@gimin0226](https://github.com/gimin0226) | [@chanmin-00](https://github.com/chanmin-00) |
 | 숭실대학교 소프트웨어학부 | 숭실대학교 소프트웨어학부 |
+
 

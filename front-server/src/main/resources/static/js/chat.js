@@ -140,23 +140,7 @@
         if (elements.responseLanguage) {
             elements.responseLanguage.addEventListener('change', function() {
                 currentLang = this.value;
-                console.log('언어 변경:', currentLang);
-
-                // 사용자 UI 언어도 동기화 (WebSocket 언어 코드를 UI 언어 이름으로 변환)
-                const langNameMap = {
-                    'Kor': '한국어',
-                    'Eng': 'English',
-                    'Jpn': '日本語',
-                    'Chn': '中文',
-                    'Vie': 'Tiếng Việt'
-                };
-                const langName = langNameMap[currentLang] || '한국어';
-
-                // localStorage에 UI 언어 저장
-                if (window.i18n) {
-                    window.i18n.setLanguage(langName);
-                    window.i18n.updatePageLanguage();
-                }
+                console.log('채팅 응답 언어 변경:', currentLang);
             });
         }
 

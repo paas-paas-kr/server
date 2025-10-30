@@ -68,7 +68,7 @@
 ## 채팅
 
 <p align="center">
-  <img width="1712" height="1037" alt="image" src="https://github.com/user-attachments/assets/dd20aae5-9831-43ea-af46-cdf831345bb1" />
+  <img width="1689" height="741" alt="image" src="https://github.com/user-attachments/assets/3342556c-e092-43b9-974c-e53f0c37fa9a" />
 </p>
 
 1. 게이트웨이 서버를 통해 채팅 서버로 요청 전달
@@ -100,6 +100,11 @@
 
 
 ## 게이트웨이
+
+<p align="center">
+  <img width="1323" height="521" alt="image" src="https://github.com/user-attachments/assets/9c9a633e-9c3b-443d-b73f-4a078e1b0da4" />
+</p>
+
 - Gateway: JWT 인증/인가 및 요청 라우팅
 - Member: 사용자 프로필 / 선호 언어 설정 관리
 - 각 서비스 간 통신은 Service 이름 기반 내부 DNS 활용
@@ -113,5 +118,6 @@
 | <img src="https://github.com/gimin0226.png" height="150" width="150"> | <img src="https://github.com/chanmin-00.png" height="150" width="150"> |
 | [@gimin0226](https://github.com/gimin0226) | [@chanmin-00](https://github.com/chanmin-00) |
 | 숭실대학교 소프트웨어학부 | 숭실대학교 소프트웨어학부 |
+
 
 

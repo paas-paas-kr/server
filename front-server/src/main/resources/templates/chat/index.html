@@ -14,32 +14,8 @@
 
         /* 환영 화면 */
         .welcome-section {
-            padding: 40px 20px 20px 20px;
+            padding: 24px 20px;
             text-align: center;
-        }
-
-        .welcome-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
-
-        .welcome-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 12px;
-        }
-        .welcome-subtitle {
-            font-size: 16px;
-            color: #6b7280;
-            line-height: 1.6;
-            margin-bottom: 24px;
         }
 
         .example-questions {
@@ -64,7 +40,6 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
         }
-        .example-question-icon { font-size: 28px; margin-bottom: 12px; }
         .example-question-text { font-size: 15px; font-weight: 600; color: #1f2937; }
 
         /* 언어 선택 */
@@ -216,8 +191,31 @@
             30% { transform: translateY(-10px); opacity: 1; }
         }
 
-        .loading-message { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; display: none; }
-        .loading-message.active { display: block; }
+        .loading-message {
+            display: none !important;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 0;
+        }
+        .loading-message.active {
+            display: flex !important;
+        }
+        .loading-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+            animation: blinkIcon 1.4s ease-in-out infinite;
+        }
+        @keyframes blinkIcon {
+            0%, 100% { opacity: 0.3; transform: scale(0.95); }
+            50% { opacity: 1; transform: scale(1); }
+        }
 
         .markdown-content { font-size: 20px; }
 
@@ -247,8 +245,8 @@
     <nav class="top-nav">
         <div class="top-nav-content">
             <div class="top-nav-logo">
-                <span class="top-nav-logo-icon">🌏</span>
-                <span data-i18n="nav.logo">다문화 가정 지원</span>
+                <span class="top-nav-logo-icon">🏠</span>
+                <span data-i18n="nav.logo">온가</span>
             </div>
             <div class="top-nav-menu">
                 <a href="/home" class="top-nav-item">
@@ -287,9 +285,9 @@
         <div class="app-content" id="welcomeSection">
             <!-- 다문화 가정 안내 -->
             <div class="info-box">
-                <h3 style="color: #92400e; font-size: 20px; font-weight: 700; margin-bottom: 12px;" data-i18n="chat.infoTitle">💬 다문화 가정을 위한 AI 상담 서비스</h3>
+                <h3 style="color: #92400e; font-size: 20px; font-weight: 700; margin-bottom: 12px;" data-i18n="chat.infoTitle">💬 다문화 가정을 위한 QnA 챗봇 서비스</h3>
                 <p style="color: #78350f; font-size: 15px; line-height: 1.7;" data-i18n="chat.infoDesc">
-                    언어와 문화의 장벽 없이 24시간 AI 상담사와 대화하세요.<br>
+                    언어와 문화의 장벽 없이 24시간 QnA 챗봇과 대화하세요.<br>
                     생활, 문화, 행정 등 궁금한 모든 것을 물어보실 수 있습니다.
                 </p>
             </div>
@@ -322,7 +320,7 @@
                         <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);">3</div>
                         <div style="flex: 1;">
                             <div style="font-weight: 600; color: #92400e; font-size: 15px; margin-bottom: 4px;" data-i18n="chat.guide.step3.title">AI 답변 확인</div>
-                            <div style="color: #78350f; font-size: 14px; line-height: 1.6;" data-i18n="chat.guide.step3.desc">AI 상담사가 실시간으로 답변합니다. 추가 질문도 자유롭게 계속할 수 있습니다.</div>
+                            <div style="color: #78350f; font-size: 14px; line-height: 1.6;" data-i18n="chat.guide.step3.desc">QnA 챗봇이 실시간으로 답변합니다. 추가 질문도 자유롭게 계속할 수 있습니다.</div>
                         </div>
                     </div>
                     <!-- Step 4 -->
@@ -330,7 +328,7 @@
                         <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);">4</div>
                         <div style="flex: 1;">
                             <div style="font-weight: 600; color: #92400e; font-size: 15px; margin-bottom: 4px;" data-i18n="chat.guide.step4.title">음성 파일 업로드 (선택)</div>
-                            <div style="color: #78350f; font-size: 14px; line-height: 1.6;" data-i18n="chat.guide.step4.desc">입력창 옆 📎 버튼을 클릭하여 음성 파일을 업로드하면 AI가 음성을 텍스트로 변환하여 답변합니다.</div>
+                            <div style="color: #78350f; font-size: 14px; line-height: 1.6;" data-i18n="chat.guide.step4.desc">입력창 옆 🎤 버튼을 클릭하여 음성 파일을 업로드하면 AI가 음성을 텍스트로 변환하여 답변합니다.</div>
                         </div>
                     </div>
                 </div>
@@ -339,15 +337,8 @@
             <!-- 환영 카드 -->
             <div class="card">
                 <div class="welcome-section">
-                    <div class="welcome-icon">💬</div>
-                    <h2 class="welcome-title" data-i18n="chat.welcome.title">AI 상담사와 대화를 시작하세요</h2>
-                    <p class="welcome-subtitle" data-i18n="chat.welcome.subtitle">
-                        다문화 가정을 위한 AI 상담사입니다.<br>
-                        언어, 문화, 생활 정보 등 무엇이든 물어보세요.
-                    </p>
-
                     <!-- 언어 선택 -->
-                    <div class="language-selector">
+                    <div class="language-selector" style="margin-top: 0;">
                         <label data-i18n="chat.selectLanguage">응답 언어:</label>
                         <select id="responseLanguage">
                             <option value="Kor">한국어 (Korean)</option>
@@ -359,21 +350,17 @@
                     </div>
 
                     <!-- 예시 질문 -->
-                    <div class="example-questions">
+                    <div class="example-questions" style="margin-top: 24px;">
                         <div class="example-question" onclick="window.ChatApp && window.ChatApp.askExampleFromElement(this)">
-                            <div class="example-question-icon">📝</div>
                             <div class="example-question-text" data-i18n="chat.example1">한국에서 외국인 등록은 어떻게 하나요?</div>
                         </div>
                         <div class="example-question" onclick="window.ChatApp && window.ChatApp.askExampleFromElement(this)">
-                            <div class="example-question-icon">🏠</div>
                             <div class="example-question-text" data-i18n="chat.example2">다문화 가정 지원 프로그램에는 어떤 것이 있나요?</div>
                         </div>
                         <div class="example-question" onclick="window.ChatApp && window.ChatApp.askExampleFromElement(this)">
-                            <div class="example-question-icon">🌏</div>
                             <div class="example-question-text" data-i18n="chat.example3">한국 문화와 생활 예절에 대해 알려주세요</div>
                         </div>
                         <div class="example-question" onclick="window.ChatApp && window.ChatApp.askExampleFromElement(this)">
-                            <div class="example-question-icon">🎓</div>
                             <div class="example-question-text" data-i18n="chat.example4">자녀 교육과 학교 생활에 대해 궁금합니다</div>
                         </div>
                     </div>
@@ -385,15 +372,11 @@
         <div class="chat-messages-container" id="chatMessagesContainer">
             <div id="chatMessages">
                 <div class="loading-message" id="loadingMessage">
-                    <div class="message">
-                        <div class="message-wrapper">
-                            <span data-i18n="chat.loading">AI 상담사가 응답하고 있습니다</span>
-                            <div style="margin-top: 8px; display: inline-flex; gap: 5px;">
-                                <span class="typing-dot"></span>
-                                <span class="typing-dot"></span>
-                                <span class="typing-dot"></span>
-                            </div>
-                        </div>
+                    <div class="loading-icon">
+                        <svg viewBox="0 0 24 24" fill="white" style="width: 24px; height: 24px;">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22" fill="white"></polyline>
+                        </svg>
                     </div>
                 </div>
             </div>
@@ -403,10 +386,11 @@
     <!-- 고정 입력 영역 -->
     <div class="chat-input-area" id="chatInputArea">
         <div class="chat-input-wrapper">
-            <label for="audioFileInput" class="file-upload-label" title="음성 파일 업로드">📎</label>
+            <label for="audioFileInput" class="file-upload-label" title="음성 파일 업로드">🎤</label>
             <input type="file" id="audioFileInput" accept="audio/*">
             <textarea class="chat-input" id="chatInput" placeholder="메시지를 입력하세요..." data-i18n-placeholder="chat.inputPlaceholder" rows="1"></textarea>
             <button class="send-button" id="sendButton"><span data-i18n="chat.send">↑</span></button>
+            <button class="send-button" onclick="window.ChatApp && window.ChatApp.clearMessages()" title="새 채팅" style="margin-left: 8px;"><span data-i18n="chat.newChat">새 채팅</span></button>
         </div>
     </div>
 

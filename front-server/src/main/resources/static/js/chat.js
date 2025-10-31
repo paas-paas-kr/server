@@ -46,6 +46,9 @@
         elements.loadingMessage = document.getElementById('loadingMessage');
         elements.responseLanguage = document.getElementById('responseLanguage');
 
+        // 저장된 메시지 복원
+        loadMessages();
+
         // 사용자 언어 설정 가져오기
         getUserLanguage();
 
@@ -210,18 +213,38 @@
                 const data = JSON.parse(event.data);
                 console.log('📩 메시지 수신:', data);
 
-                // 로딩 메시지 숨기기
-                hideLoadingMessage();
+                // 에러 메시지 처리
+                if (data.error || (data.type === 'ERROR')) {
+                    hideLoadingMessage();
+
+                    // 503 에러인 경우에만 "죄송합니다" 메시지 표시
+                    if (data.statusCode === 503 || data.code === 503 ||
+                        (data.message && data.message.includes('503'))) {
+                        const errorMsg = window.i18n ? window.i18n.translate('error.503') : '죄송합니다. 일시적인 오류가 발생했습니다. 다시 시도해주세요.';
+                        addAssistantMessage(errorMsg);
+                    }
+                    // 503 에러가 아닌 경우 메시지만 표시 (죄송합니다 없이)
+                    else {
+                        const errorText = data.message || data.error || '오류가 발생했습니다.';
+                        console.error('채팅 에러:', errorText);
+                        // 503이 아닌 에러는 로그만 남기고 메시지를 표시하지 않음
+                    }
+
+                    setWaitingResponse(false);
+                    return;
+                }
 
                 // 이벤트 타입에 따라 처리
                 if (data.event === 'result' || data.event === 'original_text') {
                     // LLM 응답
                     if (data.data && data.data.text) {
+                        hideLoadingMessage();
                         addAssistantMessage(data.data.text);
                     }
                 } else if (data.type === 'nlp-stream') {
                     // 스트리밍 응답
                     if (data.event === 'original_text' && data.data?.text) {
+                        hideLoadingMessage();
                         addAssistantMessage(data.data.text);
                     }
                 }
@@ -240,7 +263,29 @@
      */
     function handleClose(event) {
         console.log('🔌 웹소켓 연결 종료:', event.code, event.reason);
+        console.log('🔍 연결 종료 상세:', {code: event.code, reason: event.reason, wasClean: event.wasClean});
         isConnecting = false;
+
+        // 비정상 종료 시 로딩 메시지 숨기기
+        if (event.code !== 1000) {
+            hideLoadingMessage();
+            setWaitingResponse(false);
+        }
+
+        // 503 에러 또는 1006 에러(서버 연결 실패)만 에러 메시지 표시
+        // WebSocket close code 1006 = abnormal closure (서버 503 에러 시 발생)
+        if (event.code === 1006 || event.reason.includes('503')) {
+            // 에러 메시지 표시 (다국어 지원)
+            const errorMsg = window.i18n ? window.i18n.translate('error.503') : '죄송합니다. 일시적인 오류가 발생했습니다. 다시 시도해주세요.';
+            const errorMessage = {
+                type: 'assistant',
+                content: errorMsg,
+                timestamp: new Date()
+            };
+            messages.push(errorMessage);
+            renderMessage(errorMessage);
+            saveMessages();
+        }
 
         // 재연결 시도
         if (event.code !== 1000) { // 정상 종료가 아니면
@@ -257,6 +302,12 @@
     function handleError(error) {
         console.error('❌ 웹소켓 에러:', error);
         isConnecting = false;
+
+        // 로딩 메시지만 숨기고 에러 메시지는 표시하지 않음
+        hideLoadingMessage();
+
+        // 입력 활성화
+        setWaitingResponse(false);
     }
 
     /**
@@ -269,7 +320,8 @@
         }
 
         if (!ws || ws.readyState !== WebSocket.OPEN) {
-            alert('채팅 서버에 연결되지 않았습니다.');
+            const errorMsg = window.i18n ? window.i18n.translate('error.notConnected') : '채팅 서버에 연결되지 않았습니다.';
+            alert(errorMsg);
             return;
         }
 
@@ -356,8 +408,26 @@
      * 로딩 메시지 표시
      */
     function showLoadingMessage() {
+        console.log('🔄 showLoadingMessage 호출됨');
+        console.log('elements.loadingMessage:', elements.loadingMessage);
+
         if (elements.loadingMessage) {
+            console.log('✅ 로딩 메시지 요소 존재, active 클래스 추가');
+            console.log('현재 클래스:', elements.loadingMessage.className);
             elements.loadingMessage.classList.add('active');
+            console.log('변경 후 클래스:', elements.loadingMessage.className);
+
+            // 로딩 메시지가 DOM에 있는지 확인
+            if (elements.loadingMessage.parentNode === elements.chatMessages) {
+                console.log('✅ 로딩 메시지가 chatMessages에 있음');
+            } else {
+                console.log('⚠️ 로딩 메시지가 chatMessages에 없음, 다시 추가');
+                elements.chatMessages.appendChild(elements.loadingMessage);
+            }
+
+            scrollToBottom();
+        } else {
+            console.error('❌ loadingMessage 요소를 찾을 수 없습니다');
         }
     }
 
@@ -366,6 +436,7 @@
      */
     function hideLoadingMessage() {
         if (elements.loadingMessage) {
+            console.log('✅ 로딩 메시지 숨김');
             elements.loadingMessage.classList.remove('active');
         }
     }
@@ -395,6 +466,7 @@
         };
         messages.push(message);
         renderMessage(message);
+        saveMessages();
     }
 
     /**
@@ -408,6 +480,7 @@
         };
         messages.push(message);
         renderMessage(message);
+        saveMessages();
 
         // 응답 완료
         setWaitingResponse(false);
@@ -444,7 +517,14 @@
         wrapper.appendChild(timeDiv);
 
         messageDiv.appendChild(wrapper);
-        elements.chatMessages.appendChild(messageDiv);
+
+        // 로딩 메시지 전에 삽입
+        if (elements.loadingMessage && elements.loadingMessage.parentNode === elements.chatMessages) {
+            elements.chatMessages.insertBefore(messageDiv, elements.loadingMessage);
+        } else {
+            elements.chatMessages.appendChild(messageDiv);
+        }
+
         scrollToBottom();
     }
 
@@ -453,7 +533,9 @@
      */
     function scrollToBottom() {
         setTimeout(() => {
-            elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+            if (elements.chatMessagesContainer) {
+                elements.chatMessagesContainer.scrollTop = elements.chatMessagesContainer.scrollHeight;
+            }
         }, 100);
     }
 
@@ -530,7 +612,8 @@
 
         } catch (error) {
             console.error('오디오 파일 전송 실패:', error);
-            alert('오디오 파일 전송 중 오류가 발생했습니다.');
+            const errorMsg = window.i18n ? window.i18n.translate('error.audioUpload') : '오디오 파일 전송 중 오류가 발생했습니다.';
+            alert(errorMsg);
             setWaitingResponse(false);
         } finally {
             // 파일 입력 초기화
@@ -606,10 +689,68 @@
         });
     }
 
+    /**
+     * 메시지 저장
+     */
+    function saveMessages() {
+        try {
+            localStorage.setItem('chatMessages', JSON.stringify(messages));
+        } catch (e) {
+            console.error('메시지 저장 실패:', e);
+        }
+    }
+
+    /**
+     * 메시지 로드
+     */
+    function loadMessages() {
+        try {
+            const saved = localStorage.getItem('chatMessages');
+            if (saved) {
+                messages = JSON.parse(saved);
+                console.log('💾 저장된 메시지 복원:', messages.length + '개');
+
+                // 메시지가 있으면 채팅 화면 표시
+                if (messages.length > 0) {
+                    showChatSection();
+                    messages.forEach(msg => {
+                        msg.timestamp = new Date(msg.timestamp);
+                        renderMessage(msg);
+                    });
+
+                    // 로딩 메시지를 맨 뒤로 이동
+                    if (elements.loadingMessage && elements.chatMessages) {
+                        elements.chatMessages.appendChild(elements.loadingMessage);
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('메시지 로드 실패:', e);
+        }
+    }
+
+    /**
+     * 메시지 초기화
+     */
+    function clearMessages() {
+        const confirmMsg = window.i18n ? window.i18n.translate('error.confirm.newChat') : '새 채팅을 시작하시겠습니까? 현재 대화 내용이 삭제됩니다.';
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+        messages = [];
+        localStorage.removeItem('chatMessages');
+        elements.chatMessages.innerHTML = '<div class="loading-message" id="loadingMessage"><div class="loading-icon"><svg viewBox="0 0 24 24" fill="white" style="width: 24px; height: 24px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22" fill="white"></polyline></svg></div></div>';
+        elements.loadingMessage = document.getElementById('loadingMessage');
+        elements.welcomeSection.style.display = 'block';
+        elements.chatMessagesContainer.classList.remove('active');
+    }
+
     // 공개 API
     window.ChatApp.init = init;
     window.ChatApp.sendMessage = sendMessage;
     window.ChatApp.askExample = askExample;
     window.ChatApp.askExampleFromElement = askExampleFromElement;
     window.ChatApp.connect = connectWebSocket;
+    window.ChatApp.clearMessages = clearMessages;
 })();

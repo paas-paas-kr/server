@@ -11,8 +11,8 @@
     <nav class="top-nav">
         <div class="top-nav-content">
             <div class="top-nav-logo">
-                <span class="top-nav-logo-icon">🌏</span>
-                <span data-i18n="nav.logo">다문화 가정 지원</span>
+                <span class="top-nav-logo-icon">🏠</span>
+                <span data-i18n="nav.logo">온가</span>
             </div>
             <div class="top-nav-menu">
                 <a href="/home" class="top-nav-item">
@@ -103,19 +103,6 @@
                             <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
                     </a>
-
-                    <a href="#" onclick="clearAllData(); return false;" class="menu-item">
-                        <div class="menu-item-content">
-                            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #ef4444;">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                            <span style="font-weight: 600; color: #ef4444;" data-i18n="mypage.deleteData">모든 데이터 삭제</span>
-                        </div>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                    </a>
                 </div>
             </div>
 
@@ -164,7 +151,7 @@
     <div id="languageModal" class="modal">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
-                <h2 class="modal-title">언어 설정</h2>
+                <h2 class="modal-title" data-i18n="mypage.language">언어 설정</h2>
                 <button class="modal-close" onclick="closeLanguageModal()">&times;</button>
             </div>
             <div class="modal-body">
@@ -198,14 +185,14 @@
     <div id="notificationModal" class="modal">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
-                <h2 class="modal-title">알림 설정</h2>
+                <h2 class="modal-title" data-i18n="mypage.notification">알림 설정</h2>
                 <button class="modal-close" onclick="closeNotificationModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <div style="padding: 20px; text-align: center;">
                     <div style="font-size: 64px; margin-bottom: 20px;" id="notificationIcon">🔔</div>
                     <p style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;" id="notificationStatus">알림이 활성화되어 있습니다</p>
-                    <p style="color: var(--text-secondary); margin-bottom: 32px;">대화 메시지와 문서 요약 완료 시 알림을 받습니다</p>
+                    <p style="color: var(--text-secondary); margin-bottom: 32px;" data-i18n="mypage.notificationDesc">대화 메시지와 문서 요약 완료 시 알림을 받습니다</p>
                     <button class="btn btn-primary" onclick="toggleNotification()" id="notificationToggleBtn">
                         알림 끄기
                     </button>
@@ -233,7 +220,8 @@
                     'JAPANESE': '日本語'
                 };
                 const langName = langMap[userInfo.preferredLanguage] || '한국어';
-                document.getElementById('profileLanguage').textContent = `선호 언어: ${langName}`;
+                const preferredLanguageLabel = window.i18n ? window.i18n.translate('mypage.preferredLanguage') : '선호 언어:';
+                document.getElementById('profileLanguage').textContent = `${preferredLanguageLabel} ${langName}`;
             }
         }
 
@@ -242,10 +230,14 @@
             const currentName = document.getElementById('profileName').textContent;
             const currentEmail = document.getElementById('profileEmail').textContent;
 
-            const newName = prompt('이름을 입력하세요:', currentName);
+            const namePrompt = window.i18n ? window.i18n.translate('mypage.prompt.name') : '이름을 입력하세요:';
+            const emailPrompt = window.i18n ? window.i18n.translate('mypage.prompt.email') : '이메일을 입력하세요:';
+            const successMsg = window.i18n ? window.i18n.translate('mypage.profileUpdated') : '✅ 프로필이 업데이트되었습니다.';
+
+            const newName = prompt(namePrompt, currentName);
             if (newName === null || newName.trim() === '') return;
 
-            const newEmail = prompt('이메일을 입력하세요:', currentEmail);
+            const newEmail = prompt(emailPrompt, currentEmail);
             if (newEmail === null || newEmail.trim() === '') return;
 
             const userInfo = {
@@ -255,7 +247,7 @@
 
             localStorage.setItem('userInfo', JSON.stringify(userInfo));
             loadUserInfo();
-            alert('✅ 프로필이 업데이트되었습니다.');
+            alert(successMsg);
         }
 
         // 언어 설정 모달 열기
@@ -322,24 +314,32 @@
                     // 프로필 정보 다시 로드
                     loadUserInfo();
 
-                    alert(`✅ 언어가 "${language}"로 변경되었습니다.\nLanguage changed to "${language}".`);
+                    const successMsg = window.i18n ? window.i18n.translate('mypage.languageChanged').replace('{0}', language) : `✅ 언어가 "${language}"로 변경되었습니다.\nLanguage changed to "${language}".`;
+                    alert(successMsg);
                 } else {
                     const errorText = await response.text();
                     console.error('❌ 언어 변경 실패:', response.status, errorText);
-                    alert(`언어 설정 변경에 실패했습니다.\n상태: ${response.status}\n오류: ${errorText}`);
+                    const errorMsg = window.i18n ? window.i18n.translate('mypage.languageChangeFailed').replace('{0}', response.status).replace('{1}', errorText) : `언어 설정 변경에 실패했습니다.\n상태: ${response.status}\n오류: ${errorText}`;
+                    alert(errorMsg);
                 }
             } catch (error) {
                 console.error('❌ Language update error:', error);
-                alert(`언어 설정 변경 중 오류가 발생했습니다.\n오류: ${error.message}`);
+                const errorMsg = window.i18n ? window.i18n.translate('mypage.languageChangeError').replace('{0}', error.message) : `언어 설정 변경 중 오류가 발생했습니다.\n오류: ${error.message}`;
+                alert(errorMsg);
             }
         }
 
         // 알림 설정 모달 열기
         function showNotificationSetting() {
             const enabled = localStorage.getItem('notifications') !== 'false';
+            const enabledText = window.i18n ? window.i18n.translate('mypage.notificationEnabled') : '알림이 활성화되어 있습니다';
+            const disabledText = window.i18n ? window.i18n.translate('mypage.notificationDisabled') : '알림이 비활성화되어 있습니다';
+            const turnOffText = window.i18n ? window.i18n.translate('mypage.notificationTurnOff') : '알림 끄기';
+            const turnOnText = window.i18n ? window.i18n.translate('mypage.notificationTurnOn') : '알림 켜기';
+
             document.getElementById('notificationIcon').textContent = enabled ? '🔔' : '🔕';
-            document.getElementById('notificationStatus').textContent = enabled ? '알림이 활성화되어 있습니다' : '알림이 비활성화되어 있습니다';
-            document.getElementById('notificationToggleBtn').textContent = enabled ? '알림 끄기' : '알림 켜기';
+            document.getElementById('notificationStatus').textContent = enabled ? enabledText : disabledText;
+            document.getElementById('notificationToggleBtn').textContent = enabled ? turnOffText : turnOnText;
             document.getElementById('notificationModal').classList.add('open');
         }
 
@@ -351,63 +351,123 @@
         // 알림 토글
         function toggleNotification() {
             const enabled = localStorage.getItem('notifications') !== 'false';
+            const disabledMsg = window.i18n ? window.i18n.translate('mypage.notificationDisabledMsg') : '🔕 알림이 비활성화되었습니다.';
+            const enabledMsg = window.i18n ? window.i18n.translate('mypage.notificationEnabledMsg') : '🔔 알림이 활성화되었습니다.';
             localStorage.setItem('notifications', enabled ? 'false' : 'true');
             closeNotificationModal();
-            alert(enabled ? '🔕 알림이 비활성화되었습니다.' : '🔔 알림이 활성화되었습니다.');
+            alert(enabled ? disabledMsg : enabledMsg);
         }
 
-        // 모든 데이터 삭제
-        function clearAllData() {
-            if (!confirm('⚠️ 모든 대화 기록과 문서를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')) {
-                return;
-            }
-
-            if (!confirm('정말로 삭제하시겠습니까?\n\n마지막 확인입니다.')) {
-                return;
-            }
-
-            localStorage.removeItem('chatThreads');
-            localStorage.removeItem('documents');
-            alert('✅ 모든 데이터가 삭제되었습니다.');
-        }
-
-        // 도움말
+        // 도움말 모달
         function showHelp() {
-            alert(`📱 다문화 가정 상담 서비스 사용 가이드
+            const guideTitle = window.i18n ? window.i18n.translate('mypage.guide') : '사용 가이드';
+            const chatTitle = window.i18n ? window.i18n.translate('mypage.help.chat.title') : '💬 QnA 챗봇';
+            const chatItem1 = window.i18n ? window.i18n.translate('mypage.help.chat.item1') : 'AI와 실시간으로 대화할 수 있습니다';
+            const chatItem2 = window.i18n ? window.i18n.translate('mypage.help.chat.item2') : '원하는 언어를 선택하여 답변을 받을 수 있습니다';
+            const chatItem3 = window.i18n ? window.i18n.translate('mypage.help.chat.item3') : '음성 파일을 업로드하여 질문할 수 있습니다';
+            const docTitle = window.i18n ? window.i18n.translate('mypage.help.document.title') : '📄 문서';
+            const docItem1 = window.i18n ? window.i18n.translate('mypage.help.document.item1') : 'PDF 또는 이미지 파일을 업로드하면 AI가 자동으로 요약해줍니다';
+            const docItem2 = window.i18n ? window.i18n.translate('mypage.help.document.item2') : '드래그 앤 드롭으로 간편하게 업로드하세요';
+            const docItem3 = window.i18n ? window.i18n.translate('mypage.help.document.item3') : '최대 10MB까지 업로드 가능합니다';
+            const mypageTitle = window.i18n ? window.i18n.translate('mypage.help.mypage.title') : '👤 마이페이지';
+            const mypageItem1 = window.i18n ? window.i18n.translate('mypage.help.mypage.item1') : '프로필과 설정을 관리할 수 있습니다';
+            const mypageItem2 = window.i18n ? window.i18n.translate('mypage.help.mypage.item2') : '언어 설정을 변경할 수 있습니다';
+            const mypageItem3 = window.i18n ? window.i18n.translate('mypage.help.mypage.item3') : '알림 설정을 조정할 수 있습니다';
+            const footer = window.i18n ? window.i18n.translate('mypage.help.footer') : '💡 추가 질문이 있으시면 QnA 챗봇을 통해 문의해주세요!';
 
-📌 채팅 탭
-• AI 상담사와 실시간으로 대화할 수 있습니다
-• 여러 대화 스레드를 만들어 관리할 수 있습니다
-• 대화 내용은 자동으로 저장됩니다
+            const modal = document.createElement('div');
+            modal.className = 'modal open';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h2 class="modal-title">📖 ${guideTitle}</h2>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body" style="text-align: left;">
+                        <div style="margin-bottom: 24px;">
+                            <h3 style="color: #f59e0b; font-size: 18px; font-weight: 700; margin-bottom: 12px;">
+                                ${chatTitle}
+                            </h3>
+                            <ul style="color: #1f2937; font-size: 15px; line-height: 1.8; margin-left: 20px;">
+                                <li>${chatItem1}</li>
+                                <li>${chatItem2}</li>
+                                <li>${chatItem3}</li>
+                            </ul>
+                        </div>
 
-📌 문서 탭
-• 문서를 업로드하면 AI가 자동으로 요약해줍니다
-• PDF, DOC, DOCX, TXT 파일을 지원합니다
-• 드래그 앤 드롭으로 간편하게 업로드하세요
-• 최대 10MB까지 업로드 가능합니다
+                        <div style="margin-bottom: 24px;">
+                            <h3 style="color: #f59e0b; font-size: 18px; font-weight: 700; margin-bottom: 12px;">
+                                ${docTitle}
+                            </h3>
+                            <ul style="color: #1f2937; font-size: 15px; line-height: 1.8; margin-left: 20px;">
+                                <li>${docItem1}</li>
+                                <li>${docItem2}</li>
+                                <li>${docItem3}</li>
+                            </ul>
+                        </div>
 
-📌 마이페이지
-• 프로필과 설정을 관리할 수 있습니다
-• 언어 설정을 변경할 수 있습니다
+                        <div style="margin-bottom: 24px;">
+                            <h3 style="color: #f59e0b; font-size: 18px; font-weight: 700; margin-bottom: 12px;">
+                                ${mypageTitle}
+                            </h3>
+                            <ul style="color: #1f2937; font-size: 15px; line-height: 1.8; margin-left: 20px;">
+                                <li>${mypageItem1}</li>
+                                <li>${mypageItem2}</li>
+                                <li>${mypageItem3}</li>
+                            </ul>
+                        </div>
 
-💡 추가 질문이 있으시면 채팅을 통해 문의해주세요!`);
+                        <div style="padding: 16px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; border: 2px solid #fbbf24;">
+                            <p style="color: #92400e; font-size: 14px; font-weight: 600;">${footer}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
 
-        // 앱 정보
+        // 앱 정보 모달
         function showAbout() {
-            alert(`🌏 다문화 가정 상담 서비스
+            const aboutTitle = window.i18n ? window.i18n.translate('mypage.about') : '앱 정보';
+            const appName = window.i18n ? window.i18n.translate('mypage.about.appName') : '온가';
+            const description = window.i18n ? window.i18n.translate('mypage.about.description') : 'AI 기반 다문화 가정 정보 장벽 해소 플랫폼';
+            const detail1 = window.i18n ? window.i18n.translate('mypage.about.detail1') : '다문화 가정을 위한 AI 기반 QnA 챗봇 및 문서 지원 서비스입니다.';
+            const detail2 = window.i18n ? window.i18n.translate('mypage.about.detail2') : '언어와 문화의 장벽을 넘어 모든 가정이 필요한 정보와 도움을 쉽게 받을 수 있도록 돕고 있습니다.';
+            const version = window.i18n ? window.i18n.translate('mypage.about.version') : '버전: 1.0.0';
+            const developer = window.i18n ? window.i18n.translate('mypage.about.developer') : '개발: PaaSPaaS Team';
+            const copyright = window.i18n ? window.i18n.translate('mypage.about.copyright') : '© 2025 All rights reserved.';
 
-버전: 1.0.0
-개발: PaaSPaaS Team
+            const modal = document.createElement('div');
+            modal.className = 'modal open';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <h2 class="modal-title">ℹ️ ${aboutTitle}</h2>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body" style="text-align: center;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">🏠</div>
+                        <h2 style="font-size: 28px; font-weight: 700; color: #1f2937; margin-bottom: 12px;">${appName}</h2>
+                        <p style="font-size: 16px; color: #6b7280; margin-bottom: 32px;">${description}</p>
 
-다문화 가정을 위한 AI 기반 상담 및
-문서 지원 서비스입니다.
+                        <div style="text-align: left; background: #f9fafb; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                            <p style="font-size: 15px; color: #1f2937; line-height: 1.7; margin-bottom: 12px;">
+                                ${detail1}
+                            </p>
+                            <p style="font-size: 15px; color: #1f2937; line-height: 1.7;">
+                                ${detail2}
+                            </p>
+                        </div>
 
-우리는 언어와 문화의 장벽을 넘어
-모든 가정이 필요한 정보와 도움을
-쉽게 받을 수 있도록 돕고 있습니다.
-
-© 2025 All rights reserved.`);
+                        <div style="padding: 12px; background: white; border: 1px solid #e5e7eb; border-radius: 8px;">
+                            <p style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">${version}</p>
+                            <p style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">${developer}</p>
+                            <p style="font-size: 12px; color: #9ca3af;">${copyright}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
 
         // 로그아웃

@@ -64,7 +64,15 @@
 - 배포: NCP SourceCommit → SourceBuild → SourceDeploy → SourcePipeline  
 - 각 모듈 독립 빌드/배포/롤백 지원  
 
+## CI/CD 파이프라인 및 형상 관리
+<p align="center">
+  <img width="1826" height="535" alt="image" src="https://github.com/user-attachments/assets/63b89e69-b36d-42ba-b524-a9f8a64b0ab8" />
+</p>
 
+- **SourceCommit** : Git 기반 형상 관리로 코드 버전 및 변경 이력을 체계적으로 관리
+- **SourceBuild** : 변경된 코드를 기반으로 Docker 이미지를 빌드하고 Container Registry에 저장
+- **SourceDeploy** : Kubernetes 클러스터에 컨테이너를 자동 배포하며, Rolling Update로 무중단 배포 실현
+- **SourcePipeline** : 위 과정들을 하나의 통합 워크플로우로 연결해 커밋부터 배포까지 자동화
 ## 채팅
 
 <p align="center">
@@ -84,7 +92,7 @@
 
 ## 문서 시스템
 
-#쓰기
+### 쓰기
 <p align="center">
   <img width="2188" height="1170" alt="image" src="https://github.com/user-attachments/assets/2b1c6a43-ed64-4e21-8cdd-288e563f01ae" />
 </p>
@@ -99,7 +107,7 @@
 8. 생성된 요약 및 추출 결과는 MySQL 데이터베이스에 저장
 9. 사용자는 요청 직후 결과를 받지 않으며, 백그라운드에서 요약 작업이 완료된 후 마이페이지나 문서 목록 화면을 통해 요약 결과를 조회
 
-# 읽기
+### 읽기
 <p align="center">
   <img width="2142" height="571" alt="image" src="https://github.com/user-attachments/assets/59342834-cccd-44b2-8f78-016d5d788a18" />
 </p>
@@ -113,9 +121,8 @@
 7. 최종적으로 요약 결과 데이터는 게이트웨이 서버를 통해 사용자에게 응답으로 반환
 
 ## 게이트웨이
-
 <p align="center">
-  <img width="1323" height="521" alt="image" src="https://github.com/user-attachments/assets/9c9a633e-9c3b-443d-b73f-4a078e1b0da4" />
+<img width="1743" height="666" alt="image" src="https://github.com/user-attachments/assets/b21e4ca9-809d-4e35-ae18-34248a0a05bf" />
 </p>
 
 1. 사용자가 로그인 요청을 수행하면, 요청은 게이트웨이 서버를 통해 멤버 시스템으로 전달
@@ -140,6 +147,7 @@
 | <img src="https://github.com/gimin0226.png" height="150" width="150"> | <img src="https://github.com/chanmin-00.png" height="150" width="150"> |
 | [@gimin0226](https://github.com/gimin0226) | [@chanmin-00](https://github.com/chanmin-00) |
 | 숭실대학교 소프트웨어학부 | 숭실대학교 소프트웨어학부 |
+
 
 
 

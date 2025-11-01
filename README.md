@@ -1,6 +1,8 @@
 <div align="center">
 
-#  🏠 온가: 온 세상 가족
+# 🏠 온가: 온 세상 가족
+
+[![Notion Page](https://img.shields.io/badge/Notion%20Project%20Page-000000?style=for-the-badge&logo=notion&logoColor=white)](https://cotato12.notion.site/294ecad001458191a24bc61c34e4ea6b)
 
 </div>
 
@@ -148,6 +150,7 @@
 | <img src="https://github.com/gimin0226.png" height="150" width="150"> | <img src="https://github.com/chanmin-00.png" height="150" width="150"> |
 | [@gimin0226](https://github.com/gimin0226) | [@chanmin-00](https://github.com/chanmin-00) |
 | 숭실대학교 소프트웨어학부 | 숭실대학교 소프트웨어학부 |
+
 
 
 

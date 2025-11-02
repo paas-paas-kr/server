@@ -7,6 +7,9 @@ metadata:
     # NGINX Ingress Controller 설정
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 
+    # 파일 업로드 크기 제한 (413 에러 방지)
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+
     # WebSocket 지원 설정
     nginx.ingress.kubernetes.io/websocket-services: "gateway-service"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"

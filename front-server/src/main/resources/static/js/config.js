@@ -31,4 +31,57 @@
         }
         return headers;
     };
+
+    // 토큰 유효성 검증 함수
+    window.validateToken = async function() {
+        const token = localStorage.getItem('accessToken');
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+
+        // 로그인 상태가 아니면 false 반환
+        if (!isLoggedIn || isLoggedIn !== 'true' || !token) {
+            return false;
+        }
+
+        try {
+            console.log('🔍 토큰 유효성 검증 중...');
+
+            // /api/auth/me 엔드포인트로 토큰 유효성 확인
+            const response = await fetch(`${window.API_BASE_URL}/api/auth/me`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                credentials: 'include'
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                // 토큰 만료 또는 유효하지 않음 - 자동 로그아웃
+                console.warn('⚠️ 토큰이 만료되었거나 유효하지 않습니다.');
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userInfo');
+                return false;
+            }
+
+            if (!response.ok) {
+                console.error('❌ 토큰 검증 실패:', response.status);
+                return false;
+            }
+
+            console.log('✅ 토큰 유효성 검증 완료');
+            return true;
+        } catch (error) {
+            console.error('❌ 토큰 검증 중 오류:', error);
+            // 네트워크 오류의 경우 false 반환하지 않음 (서버 다운 등의 경우)
+            return false;
+        }
+    };
+
+    // 인증 페이지로 리다이렉트하는 함수
+    window.redirectToLogin = function(message) {
+        if (message) {
+            alert(message);
+        }
+        window.location.href = '/auth/login';
+    };
 })();

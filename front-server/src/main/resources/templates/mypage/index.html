@@ -532,11 +532,11 @@
     <script src="/js/i18n.js"></script>
     <script>
         // 페이지 로드 시 로그인 체크 및 언어 적용
-        document.addEventListener('DOMContentLoaded', function() {
-            // 로그인 체크
-            const isLoggedIn = localStorage.getItem('isLoggedIn');
-            if (!isLoggedIn || isLoggedIn !== 'true') {
-                window.location.href = '/auth/login';
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 토큰 유효성 검증
+            const isValid = await window.validateToken();
+            if (!isValid) {
+                window.redirectToLogin('세션이 만료되었습니다. 다시 로그인해주세요.');
                 return;
             }
 

@@ -15,6 +15,7 @@
     let isWaitingResponse = false; // 응답 대기 중
     let currentLang = 'Kor'; // 기본 언어
     const ROOM_ID = 'default_room'; // 단일 채팅방 ID
+    let isReconnecting = false; // 재연결 시도 중 플래그
 
     // DOM 요소
     const elements = {
@@ -272,9 +273,9 @@
             setWaitingResponse(false);
         }
 
-        // 503 에러 또는 1006 에러(서버 연결 실패)만 에러 메시지 표시
-        // WebSocket close code 1006 = abnormal closure (서버 503 에러 시 발생)
-        if (event.code === 1006 || event.reason.includes('503')) {
+        // 503 에러만 에러 메시지 표시 (1006은 제외)
+        // WebSocket close code 1006 = abnormal closure (재연결 시 메시지 표시 안 함)
+        if (event.reason.includes('503')) {
             // 에러 메시지 표시 (다국어 지원)
             const errorMsg = window.i18n ? window.i18n.translate('error.503') : '죄송합니다. 일시적인 오류가 발생했습니다. 다시 시도해주세요.';
             const errorMessage = {

@@ -149,10 +149,11 @@
 
 | **김기민** | **정찬민** |
 |:-----------:|:-----------:|
-| <img src="https://github.com/gimin0226.png" width="150" height="150" style="object-fit: cover; border-radius: 10px;"> | <img src="https://github.com/chanmin-00.png" width="150" height="150" style="object-fit: cover; border-radius: 10px;"> |
-| [@gimin0226](https://github.com/gimin0226) | [@chanmin-00](https://github.com/chanmin-00) |
+| <img src="https://github.com/Gimini-3.png" width="150" height="150" style="object-fit: cover; border-radius: 10px;"> | <img src="https://github.com/chanmin-00.png" width="150" height="150" style="object-fit: cover; border-radius: 10px;"> |
+| [@Gimini-3](https://github.com/Gimini-3) | [@chanmin-00](https://github.com/chanmin-00) |
 | 숭실대학교 소프트웨어학부 | 숭실대학교 소프트웨어학부 |
 |- 웹소켓 기반 실시간 채팅 서비스 개발<br>- AI 및 RAG 통합 구현 | - 클라우드 인프라 구축 (NCP CI/CD, <br>Kubernetes 운영)<br>- 문서 시스템 개발 |
+
 
 
 
